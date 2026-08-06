@@ -7,6 +7,8 @@ import { useVariableStore, initializeVariableColors } from "@/stores";
 import { getDefaultValues, variableDefinitions } from "./variables";
 import { slicingIntoRingsBlocks } from "./sections/slicing-into-rings";
 
+import { unwrappingRingsBlocks } from "./sections/unwrapping-rings";
+
 useVariableStore.getState().initialize(getDefaultValues());
 initializeVariableColors(variableDefinitions);
 
@@ -89,4 +91,5 @@ initializeVariableColors(variableDefinitions);
 export const blocks: ReactElement[] = [
     // Start adding your blocks here!
     ...slicingIntoRingsBlocks,
+    ...unwrappingRingsBlocks,
 ];

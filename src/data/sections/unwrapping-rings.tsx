@@ -92,30 +92,33 @@ function UnwrappingRingsDrawing() {
         >
             {/* ─── Left side: Circle with concentric rings ─── */}
             <g data-concept="numRings">
-                {/* Draw rings from inside out */}
-                {rings.map((ring, i) => {
+                {/* Draw rings from outside in so inner rings appear on top */}
+                {[...rings].reverse().map((ring, reverseI) => {
+                    const i = numRings - 1 - reverseI; // original index
                     const innerPx = ring.innerRadius * pxPerUnit;
                     const outerPx = ring.outerRadius * pxPerUnit;
+
+                    // Create annulus path (ring shape)
+                    const cx = CIRCLE_CENTER_X;
+                    const cy = CIRCLE_CENTER_Y;
+
                     return (
                         <g key={i}>
-                            {/* Ring fill */}
-                            <circle
-                                cx={CIRCLE_CENTER_X}
-                                cy={CIRCLE_CENTER_Y}
-                                r={outerPx}
+                            {/* Ring as annulus using path with arc */}
+                            <path
+                                d={`
+                                    M ${cx + outerPx} ${cy}
+                                    A ${outerPx} ${outerPx} 0 1 1 ${cx - outerPx} ${cy}
+                                    A ${outerPx} ${outerPx} 0 1 1 ${cx + outerPx} ${cy}
+                                    ${innerPx > 0 ? `
+                                        M ${cx + innerPx} ${cy}
+                                        A ${innerPx} ${innerPx} 0 1 0 ${cx - innerPx} ${cy}
+                                        A ${innerPx} ${innerPx} 0 1 0 ${cx + innerPx} ${cy}
+                                    ` : ''}
+                                `}
                                 fill={ringColor(i, numRings)}
-                                stroke="none"
+                                fillRule="evenodd"
                             />
-                            {/* Inner cutout (make ring visible) */}
-                            {i > 0 && (
-                                <circle
-                                    cx={CIRCLE_CENTER_X}
-                                    cy={CIRCLE_CENTER_Y}
-                                    r={innerPx}
-                                    fill={i === 0 ? "white" : ringColor(i - 1, numRings)}
-                                    stroke="none"
-                                />
-                            )}
                         </g>
                     );
                 })}
@@ -143,7 +146,7 @@ function UnwrappingRingsDrawing() {
                         cy={CIRCLE_CENTER_Y}
                         r={ring.outerRadius * pxPerUnit}
                         fill="none"
-                        stroke={INK_QUIET}
+                        stroke="white"
                         strokeWidth="1"
                     />
                 ))}
