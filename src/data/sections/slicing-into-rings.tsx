@@ -35,9 +35,9 @@ import { MAX_RADIUS, RING_THICKNESS, ringCount, getRingRadii } from "../model";
 // ── View constants ───────────────────────────────────────────────────────────
 
 const VIEW_WIDTH = 480;
-const VIEW_HEIGHT = 400;
-const CENTER: Vec2 = { x: VIEW_WIDTH / 2, y: VIEW_HEIGHT / 2 + 20 };
-const PIXELS_PER_UNIT = 80;
+const VIEW_HEIGHT = 380;
+const CENTER: Vec2 = { x: VIEW_WIDTH / 2, y: VIEW_HEIGHT / 2 + 10 };
+const PIXELS_PER_UNIT = 40; // 4 units * 40 = 160px radius fits in 380px height
 
 const INK = "#334155";
 const INK_STRUCTURE = "#64748B";
