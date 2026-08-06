@@ -1,27 +1,27 @@
 {
   "section_id": "unwrapping-rings",
   "title": "Making Rings Thinner",
-  "status": "ready",
-  "detail": "live in the preview \u2014 quality checks skipped at your request",
-  "summary": "Making Rings Thinner \u2014 As rings get thinner, the stacked rectangles form a cleaner triangle shape",
+  "status": "building",
+  "detail": "revising",
+  "summary": "",
   "verify_passed": null,
-  "is_revision": false,
-  "registered": true,
+  "is_revision": true,
+  "registered": false,
   "issues": [],
   "skip_verification": true,
-  "sdk_session_id": "c4e93c16-665c-43a8-a9dc-bf54d1a8e875",
-  "created_at": 1786038191.844067,
-  "updated_at": 1786038393.8394098,
+  "sdk_session_id": "6b5e20b4-2082-4618-a246-15683b47c084",
+  "created_at": 1786040794.09274,
+  "updated_at": 1786040794.846904,
   "payload": {
     "section_id": "unwrapping-rings",
-    "learning_objective": "See that when a thin ring is cut and unrolled, it becomes a rectangle with width equal to the circumference (2\u03c0r) and height equal to the ring thickness \u2014 and that these rectangles stack into a triangular shape",
+    "learning_objective": "See that when a thin ring is cut and unrolled, it becomes a rectangle with width equal to the circumference (2\u03c0r) and height equal to the ring thickness",
     "mini_spec": {
       "title": "Making Rings Thinner",
-      "manipulated_variable": "Reduce thickness via slider \u2014 controls how many rings divide the circle",
-      "primary_visual_feedback": "Each strip becomes narrower as ring count increases; the stack of rectangular strips beside the circle shows more strips forming a stepped approximation to a triangle",
-      "goal_structure": "Free exploration with implicit guidance toward increasing ring count to see cleaner triangle approximation",
+      "manipulated_variable": "Slider that controls how many rings divide the circle (reducing thickness)",
+      "primary_visual_feedback": "Each strip becomes narrower as ring count increases; stack of rectangular strips beside circle shows more strips forming stepped approximation to triangle",
+      "goal_structure": "Free exploration with implicit guidance toward increasing ring count",
       "causal_chain_exposed": "Circle divided into colored bands, one band with visible thickness dr, stack of rectangular strips beside circle, strips forming stepped approximation to triangle",
-      "trace_strategy": "Current state is sufficient \u2014 focus is on the transformation at current subdivision level",
+      "trace_strategy": "Current state is sufficient",
       "aha_moment": "As rings get thinner, the stacked rectangles form a cleaner triangle shape",
       "live_url": "/api/scene-live/333ecb987c80b5651f1064b3.html"
     },
@@ -29,7 +29,7 @@
     "audience": "University (ages 20+)",
     "learner_profile": "Need foundations and step-by-step support",
     "section_context": "Second section, building on the rings from section 1. Students now see what happens when rings are cut open and laid flat.",
-    "design_brief": "This lesson derives the circle area formula \u03c0r\u00b2 using concentric rings. READ the approved live scene from ../../scene_live/333ecb987c80b5651f1064b3.html and port its mathematics and interaction faithfully \u2014 same slider control for ring thickness, same visual response (strips become narrower, stack shows more strips forming stepped triangle). Build the narrative and check question around this approved interaction. Do NOT redesign the interaction.",
+    "design_brief": "READ the approved live scene from ../../scene_live/333ecb987c80b5651f1064b3.html and port its mathematics and interaction faithfully. The scene shows a slider that controls ring thickness \u2014 as rings get thinner, strips stack beside the circle forming a stepped triangle. Do NOT redesign \u2014 use the exact interaction from the live file.",
     "proposition": "A thin ring, when cut and unrolled, becomes a rectangle with width 2\u03c0r (the circumference) and height dr (the thickness)",
     "narrative_draft": "Now for the key trick. Imagine taking scissors to one of those rings, snipping it open, and laying it flat on the table. What do you get? A thin rectangle.\n\nThe width of that rectangle is the circumference at that radius \u2014 2\u03c0r. The height is just the thickness of the ring. Adjust the slider to change how many rings divide the circle. As you add more rings, each one gets thinner, and the stack of rectangles shows a cleaner approximation of something familiar.\n\nDo you see it forming? The rectangles are arranging themselves into a shape you already know.",
     "contract": {
@@ -41,6 +41,7 @@
       "carries_over": [
         "R"
       ]
-    }
+    },
+    "revision_instruction": "Replace this section's current implementation entirely \u2014 rebuild it from this brief and the approved live visual; do not keep the existing approach."
   }
 }

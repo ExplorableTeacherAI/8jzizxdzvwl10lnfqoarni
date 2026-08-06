@@ -1,35 +1,35 @@
 {
   "section_id": "slicing-into-rings",
   "title": "Building Circle by Radius",
-  "status": "ready",
-  "detail": "live in the preview \u2014 quality checks skipped at your request",
-  "summary": "Building Circle by Radius \u2014 The circle isn't a solid blob but many thin rings stacked together from center outward",
+  "status": "building",
+  "detail": "revising",
+  "summary": "",
   "verify_passed": null,
-  "is_revision": false,
-  "registered": true,
+  "is_revision": true,
+  "registered": false,
   "issues": [],
   "skip_verification": true,
-  "sdk_session_id": "55d09a2a-e691-4373-ae2f-1c81b0152c21",
-  "created_at": 1786038173.992077,
-  "updated_at": 1786038506.445674,
+  "sdk_session_id": "35692616-b923-45b9-a6c4-ee669d247ae7",
+  "created_at": 1786040781.9917839,
+  "updated_at": 1786040782.798016,
   "payload": {
     "section_id": "slicing-into-rings",
-    "learning_objective": "Understand that a circle can be decomposed into many thin concentric rings stacked from center outward \u2014 the circle isn't a solid blob but layers from the center out",
+    "learning_objective": "Understand that a circle can be decomposed into many thin concentric rings stacked from center outward",
     "mini_spec": {
       "title": "Building Circle by Radius",
       "manipulated_variable": "Dragging the arrow tip outward to increase radius",
-      "primary_visual_feedback": "New rings paint in as the circle grows with visible ring layers; the outermost ring is highlighted at current radius",
+      "primary_visual_feedback": "New rings paint in as the circle grows with visible ring layers; outermost ring highlighted at current radius",
       "goal_structure": "Free exploration \u2014 drag from center outward to see the complete ring decomposition",
-      "causal_chain_exposed": "The current radius value displayed, the shaded region inside current radius growing, the outermost highlighted ring at current radius",
-      "trace_strategy": "All rings remain visible and accumulate, showing the buildup of layers",
+      "causal_chain_exposed": "Current radius value displayed, shaded region inside current radius growing, outermost highlighted ring at current radius",
+      "trace_strategy": "All rings remain visible and accumulate",
       "aha_moment": "The circle isn't a solid blob but many thin rings stacked together from center outward",
       "live_url": "/api/scene-live/b26474d5b37b1fb5ed01b784.html"
     },
     "target_misconception": "",
     "audience": "University (ages 20+)",
     "learner_profile": "Need foundations and step-by-step support",
-    "section_context": "Opening section of the lesson. This is where students first encounter the decomposition idea before moving on to unwrapping rings and seeing the triangle emerge.",
-    "design_brief": "This lesson derives the circle area formula \u03c0r\u00b2 using concentric rings. READ the approved live scene from ../../scene_live/b26474d5b37b1fb5ed01b784.html and port its mathematics and interaction faithfully \u2014 same formulas, same manipulated variable (draggable radius arrow), same visible response (rings paint in as radius grows). Build the narrative and check question around this approved interaction. Do NOT redesign the interaction.",
+    "section_context": "Opening section of the lesson. Students first encounter the decomposition idea before moving on to unwrapping rings and seeing the triangle emerge.",
+    "design_brief": "READ the approved live scene from ../../scene_live/b26474d5b37b1fb5ed01b784.html and port its mathematics and interaction faithfully. The scene shows a draggable radius arrow that paints concentric rings as it extends outward. Do NOT redesign \u2014 use the exact interaction from the live file.",
     "proposition": "A circle can be divided into thin concentric rings at every distance from center to edge",
     "opening": {
       "hook": "You've memorized \u03c0r\u00b2. But what if you could see exactly where it comes from? Let's slice a circle into rings and watch a familiar shape emerge.",
@@ -46,6 +46,7 @@
       "unlocks": [
         "R"
       ]
-    }
+    },
+    "revision_instruction": "Replace this section's current implementation entirely \u2014 rebuild it from this brief and the approved live visual; do not keep the existing approach."
   }
 }

@@ -1,35 +1,35 @@
 {
   "section_id": "triangle-emerges",
   "title": "Adding Ring Areas",
-  "status": "ready",
-  "detail": "live in the preview \u2014 quality checks skipped at your request",
-  "summary": "Adding Ring Areas \u2014 The sweep completes and the student sees the stacked bars form a triangle with base 2\u03c0R and height R, and the triangle area formula gives exactly \u03c0R\u00b2",
+  "status": "building",
+  "detail": "revising",
+  "summary": "",
   "verify_passed": null,
-  "is_revision": false,
-  "registered": true,
+  "is_revision": true,
+  "registered": false,
   "issues": [],
   "skip_verification": true,
-  "sdk_session_id": "ec14fc7e-c4a4-49ec-90fc-ab55f68fecb5",
-  "created_at": 1786038209.767178,
-  "updated_at": 1786038447.2231739,
+  "sdk_session_id": "ef46438f-8050-49d6-b36f-87e98f6d606a",
+  "created_at": 1786040809.446789,
+  "updated_at": 1786040810.431905,
   "payload": {
     "section_id": "triangle-emerges",
-    "learning_objective": "Realize that stacked ring-rectangles form a triangle with base 2\u03c0R and height R, whose area equals \u03c0R\u00b2 \u2014 the circle area formula",
+    "learning_objective": "Realize that stacked ring-rectangles form a triangle with base 2\u03c0R and height R, whose area equals \u03c0R\u00b2",
     "mini_spec": {
       "title": "Adding Ring Areas",
       "manipulated_variable": "Draggable slider controlling sweep position outward through the radii",
-      "primary_visual_feedback": "Horizontal bars appear stacking upward, widening with r; currently added ring highlighted; formula 2\u03c0r\u00d7dr displayed above ring; running total counter showing accumulated area",
-      "goal_structure": "Guided sweep from 0 to full radius R, with the payoff being the completed triangle and area equaling \u03c0R\u00b2",
-      "causal_chain_exposed": "Current sweep position, the ring being added with formula 2\u03c0r\u00d7dr, running total of accumulated area, triangle dimensions (base 2\u03c0R, height R), final area \u00bd \u00d7 2\u03c0R \u00d7 R = \u03c0R\u00b2",
-      "trace_strategy": "All added bars remain visible, building up the triangle progressively \u2014 this accumulation IS the concept",
-      "aha_moment": "The sweep completes and the student sees the stacked bars form a triangle with base 2\u03c0R and height R, and the triangle area formula gives exactly \u03c0R\u00b2",
+      "primary_visual_feedback": "Horizontal bars appear stacking upward, widening with r; currently added ring highlighted; formula 2\u03c0r\u00d7dr displayed; running total counter showing accumulated area approaching \u03c0R\u00b2",
+      "goal_structure": "Guided sweep from 0 to full radius R, with payoff being completed triangle and area equaling \u03c0R\u00b2",
+      "causal_chain_exposed": "Current sweep position, ring being added with formula 2\u03c0r\u00d7dr, running total of accumulated area, triangle dimensions (base 2\u03c0R, height R), final area \u00bd \u00d7 2\u03c0R \u00d7 R = \u03c0R\u00b2",
+      "trace_strategy": "All added bars remain visible, building up the triangle progressively",
+      "aha_moment": "The sweep completes and the student sees stacked bars form a triangle with base 2\u03c0R and height R, and the triangle area formula gives exactly \u03c0R\u00b2",
       "live_url": "/api/scene-live/42a276121d8278ad150d5753.html"
     },
     "target_misconception": "Students may not see why the stacked strips form exactly a triangle shape, or may not connect the triangle dimensions to the formula",
     "audience": "University (ages 20+)",
     "learner_profile": "Need foundations and step-by-step support",
     "section_context": "Final section and the aha moment. This is where everything comes together and the formula \u03c0R\u00b2 emerges from the geometry.",
-    "design_brief": "This lesson derives the circle area formula \u03c0r\u00b2 using concentric rings. READ the approved live scene from ../../scene_live/42a276121d8278ad150d5753.html and port its mathematics and interaction faithfully \u2014 same slider for sweep position, same visual response (bars stack forming triangle, area counter shows sum). Build the narrative and check question around this approved interaction. Do NOT redesign the interaction.",
+    "design_brief": "READ the approved live scene from ../../scene_live/42a276121d8278ad150d5753.html and port its mathematics and interaction faithfully. The scene shows a slider controlling sweep position \u2014 as it moves outward, bars stack forming a triangle with a running area counter approaching \u03c0R\u00b2. Do NOT redesign \u2014 use the exact interaction from the live file.",
     "proposition": "When all ring-rectangles are lined up by radius, they form a triangle with base 2\u03c0R and height R, whose area is \u00bd \u00d7 2\u03c0R \u00d7 R = \u03c0R\u00b2",
     "narrative_draft": "Here's the aha moment. The stacked rectangles form a triangle. Look at its dimensions: the base is the longest rectangle \u2014 the outer circumference, 2\u03c0R. The height is the full radius R.\n\nDrag the slider to sweep from the center outward. Watch each ring's area (2\u03c0r \u00d7 dr) add to the stack. The bars grow wider as r increases, forming that characteristic triangular profile. The running total shows your accumulated area climbing toward a familiar value.\n\nWhen you reach the full radius, the triangle is complete. Its area? Half base times height: \u00bd \u00d7 2\u03c0R \u00d7 R = \u03c0R\u00b2. That's not a formula handed down from above \u2014 it's the inevitable consequence of how circles are built from rings.",
     "contract": {
@@ -42,6 +42,7 @@
         "R",
         "numRings"
       ]
-    }
+    },
+    "revision_instruction": "Replace this section's current implementation entirely \u2014 rebuild it from this brief and the approved live visual; do not keep the existing approach."
   }
 }
