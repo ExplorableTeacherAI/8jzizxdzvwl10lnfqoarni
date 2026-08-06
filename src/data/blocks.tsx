@@ -9,6 +9,8 @@ import { slicingIntoRingsBlocks } from "./sections/slicing-into-rings";
 
 import { unwrappingRingsBlocks } from "./sections/unwrapping-rings";
 
+import { triangleEmergesBlocks } from "./sections/triangle-emerges";
+
 useVariableStore.getState().initialize(getDefaultValues());
 initializeVariableColors(variableDefinitions);
 
@@ -92,4 +94,5 @@ export const blocks: ReactElement[] = [
     // Start adding your blocks here!
     ...slicingIntoRingsBlocks,
     ...unwrappingRingsBlocks,
+    ...triangleEmergesBlocks,
 ];
