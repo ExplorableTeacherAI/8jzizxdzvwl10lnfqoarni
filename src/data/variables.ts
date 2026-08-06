@@ -232,6 +232,14 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         description: 'Derived: 2πR, width of the outermost rectangle',
     },
 
+    /** Derived: approximation error percentage */
+    unwrapping_errorPercent: {
+        defaultValue: 0,
+        type: 'number',
+        label: 'Error Percentage',
+        description: 'Derived: percentage error between rectangle sum and exact πR²',
+    },
+
     /** Assessment: what shape do the rectangles form */
     unwrapping_shapeAnswer: {
         defaultValue: '',

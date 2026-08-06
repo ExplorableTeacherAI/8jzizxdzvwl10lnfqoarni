@@ -7,6 +7,8 @@
  *
  * Proposition: A circle can be divided into thin concentric rings at every
  * distance from center to edge.
+ *
+ * This is the OPENING section of the lesson — it also performs lesson-opening events.
  */
 
 import React, { useRef, useState, type ReactElement } from "react";
@@ -30,24 +32,28 @@ import {
     numberPropsFromDefinition,
     choicePropsFromDefinition,
 } from "../variables";
-import { MAX_RADIUS, RING_THICKNESS, ringCount, getRingRadii } from "../model";
+import { MAX_RADIUS, RING_THICKNESS, ringCount } from "../model";
 
 // ── View constants ───────────────────────────────────────────────────────────
 
-const VIEW_WIDTH = 480;
-const VIEW_HEIGHT = 380;
-const CENTER: Vec2 = { x: VIEW_WIDTH / 2, y: VIEW_HEIGHT / 2 + 10 };
-const PIXELS_PER_UNIT = 40; // 4 units * 40 = 160px radius fits in 380px height
+const VIEW_WIDTH = 400;
+const VIEW_HEIGHT = 300;
+const CENTER: Vec2 = { x: VIEW_WIDTH / 2, y: VIEW_HEIGHT / 2 };
+const PIXELS_PER_UNIT = 30; // 4 units * 30 = 120px max radius fits well
 
 const INK = "#334155";
 const INK_STRUCTURE = "#64748B";
 const INK_QUIET = "#CBD5E1";
 const ACCENT = "#62D0AD";
-const ACCENT_RING_FILL = "rgba(98, 208, 173, 0.25)";
+const ACCENT_FILL = "rgba(98, 208, 173, 0.15)";
+const ACCENT_RING_STROKE = "#99e2d8";
+
+// Ring step in logical units (how often a new ring appears)
+const RING_STEP = RING_THICKNESS;
 
 // ── Bespoke Drawing Component ────────────────────────────────────────────────
 
-function ConcentricRingsDrawing() {
+function BuildingCircleDrawing() {
     const setVar = useSetVar();
     const currentRadius = useVar<number>("rings_currentRadius", 0.2);
 
@@ -56,8 +62,7 @@ function ConcentricRingsDrawing() {
     const svgRef = useRef<SVGSVGElement>(null);
 
     // Compute derived values from the model
-    const numRings = ringCount(currentRadius, RING_THICKNESS);
-    const ringRadii = getRingRadii(currentRadius, RING_THICKNESS);
+    const numRings = ringCount(currentRadius, RING_STEP);
 
     // Write derived value to store for verification
     React.useEffect(() => {
@@ -81,7 +86,7 @@ function ConcentricRingsDrawing() {
         };
     };
 
-    // Direct 1:1 tracking during drag — constrained to radial direction
+    // Direct 1:1 tracking during drag — measure distance from center
     const handlePointerMove = (event: React.PointerEvent<SVGCircleElement>) => {
         if (!dragging) return;
         const point = svgPointFromEvent(event);
@@ -91,12 +96,19 @@ function ConcentricRingsDrawing() {
         setVar("rings_currentRadius", clamp(distance, 0, MAX_RADIUS));
     };
 
-    // Calculate handle position (to the right of center along the radius line)
-    const handleX = CENTER.x + currentRadius * PIXELS_PER_UNIT;
+    // Calculate handle position (to the right of center along radius)
+    const radiusPx = currentRadius * PIXELS_PER_UNIT;
+    const handleX = CENTER.x + radiusPx;
     const handleY = CENTER.y;
 
-    // Find which ring to label with dr (the outermost complete ring)
-    const labelRingIndex = numRings > 0 ? numRings - 1 : -1;
+    // Arrow line ends slightly before the handle (ensure at least a small visible arrow)
+    const arrowEndX = CENTER.x + Math.max(4, radiusPx - 8);
+
+    // Generate ring radii for drawing
+    const ringRadii: number[] = [];
+    for (let i = 1; i <= numRings; i++) {
+        ringRadii.push(i * RING_STEP * PIXELS_PER_UNIT);
+    }
 
     return (
         <svg
@@ -104,9 +116,22 @@ function ConcentricRingsDrawing() {
             viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
             className="block w-full"
             role="img"
-            aria-label="Circle decomposed into concentric rings"
+            aria-label="Circle decomposed into concentric rings by dragging radius outward"
+            style={{ touchAction: "none" }}
         >
             <defs>
+                {/* Arrowhead marker for the radius line */}
+                <marker
+                    id="rings-arrowhead"
+                    markerWidth="10"
+                    markerHeight="7"
+                    refX="9"
+                    refY="3.5"
+                    orient="auto"
+                >
+                    <polygon points="0 0, 10 3.5, 0 7" fill={ACCENT} />
+                </marker>
+                {/* Shadow for draggable handle */}
                 <filter id="rings-handle-shadow" x="-50%" y="-50%" width="200%" height="200%">
                     <feDropShadow
                         dx="0"
@@ -118,21 +143,7 @@ function ConcentricRingsDrawing() {
                 </filter>
             </defs>
 
-            {/* Readout panel — positioned above the circle */}
-            <g
-                fontSize="13"
-                style={{ fontVariantNumeric: "tabular-nums" }}
-                data-concept="rings_ringCount"
-            >
-                <text x={CENTER.x} y="36" fill={INK} textAnchor="middle">
-                    <tspan fill={ACCENT} fontWeight="600">
-                        {numRings}
-                    </tspan>
-                    <tspan> ring{numRings !== 1 ? "s" : ""} shown</tspan>
-                </text>
-            </g>
-
-            {/* Full circle boundary — static, ink-quiet outline */}
+            {/* Full circle boundary — dashed outline showing target */}
             <circle
                 cx={CENTER.x}
                 cy={CENTER.y}
@@ -143,114 +154,88 @@ function ConcentricRingsDrawing() {
                 strokeDasharray="4 4"
             />
 
-            {/* Accumulated rings — filled from center outward */}
-            {ringRadii.map((r, i) => {
-                const outerR = r * PIXELS_PER_UNIT;
-                const innerR = (r - RING_THICKNESS) * PIXELS_PER_UNIT;
-                return (
-                    <g key={i}>
-                        {/* Ring fill */}
-                        <circle
-                            cx={CENTER.x}
-                            cy={CENTER.y}
-                            r={outerR}
-                            fill={ACCENT_RING_FILL}
-                            stroke="none"
-                        />
-                        {/* Ring boundary (structure stroke) */}
-                        <circle
-                            cx={CENTER.x}
-                            cy={CENTER.y}
-                            r={outerR}
-                            fill="none"
-                            stroke={ACCENT}
-                            strokeWidth="1.5"
-                            strokeOpacity="0.6"
-                        />
-                        {/* Inner boundary to show ring structure */}
-                        {innerR > 0 && (
-                            <circle
-                                cx={CENTER.x}
-                                cy={CENTER.y}
-                                r={innerR}
-                                fill="white"
-                                stroke="none"
-                            />
-                        )}
-                    </g>
-                );
-            })}
+            {/* Filled area that grows with radius */}
+            <circle
+                cx={CENTER.x}
+                cy={CENTER.y}
+                r={radiusPx}
+                fill={ACCENT_FILL}
+                stroke="none"
+                data-concept="rings_filledArea"
+            />
 
-            {/* Re-draw ring outlines on top for clarity */}
+            {/* Accumulated concentric ring strokes */}
             {ringRadii.map((r, i) => (
                 <circle
-                    key={`outline-${i}`}
+                    key={`ring-${i}`}
                     cx={CENTER.x}
                     cy={CENTER.y}
-                    r={r * PIXELS_PER_UNIT}
+                    r={r}
                     fill="none"
-                    stroke={ACCENT}
-                    strokeWidth={i === labelRingIndex ? "2.5" : "1.5"}
-                    strokeOpacity={i === labelRingIndex ? "1" : "0.5"}
+                    stroke={ACCENT_RING_STROKE}
+                    strokeWidth="1"
+                    strokeLinecap="round"
                 />
             ))}
 
-            {/* dr label on the outermost ring */}
-            {labelRingIndex >= 0 && numRings > 1 && (
-                <g>
-                    {/* dr bracket on the right side of the labeled ring */}
-                    <line
-                        x1={CENTER.x + (ringRadii[labelRingIndex] - RING_THICKNESS) * PIXELS_PER_UNIT + 4}
-                        y1={CENTER.y}
-                        x2={CENTER.x + ringRadii[labelRingIndex] * PIXELS_PER_UNIT - 4}
-                        y2={CENTER.y}
-                        stroke={INK}
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                    />
-                    <text
-                        x={CENTER.x + (ringRadii[labelRingIndex] - RING_THICKNESS / 2) * PIXELS_PER_UNIT}
-                        y={CENTER.y - 8}
-                        fill={INK}
-                        fontSize="11"
-                        fontStyle="italic"
-                        textAnchor="middle"
-                    >
-                        dr
-                    </text>
-                </g>
-            )}
-
-            {/* Radius line from center to handle — accent, heaviest stroke */}
-            <line
-                x1={CENTER.x}
-                y1={CENTER.y}
-                x2={handleX}
-                y2={handleY}
+            {/* Outermost ring highlighted — thicker stroke */}
+            <circle
+                cx={CENTER.x}
+                cy={CENTER.y}
+                r={radiusPx}
+                fill="none"
                 stroke={ACCENT}
                 strokeWidth="3"
                 strokeLinecap="round"
                 data-concept="rings_currentRadius"
             />
 
-            {/* Center point — small dot */}
-            <circle cx={CENTER.x} cy={CENTER.y} r="4" fill={INK_STRUCTURE} />
+            {/* Center point */}
+            <circle cx={CENTER.x} cy={CENTER.y} r="3" fill={INK_STRUCTURE} />
+
+            {/* Radius arrow line with arrowhead */}
+            <line
+                x1={CENTER.x}
+                y1={CENTER.y}
+                x2={arrowEndX}
+                y2={handleY}
+                stroke={ACCENT}
+                strokeWidth="2"
+                strokeLinecap="round"
+                markerEnd="url(#rings-arrowhead)"
+            />
+
+            {/* Handle glow (pulsing affordance) */}
+            <circle
+                cx={handleX}
+                cy={handleY}
+                r="12"
+                fill={ACCENT}
+                opacity={dragging ? 0.5 : 0.3}
+                className={!dragging && !hovered ? "animate-pulse" : ""}
+            />
 
             {/* Draggable handle — accent, with affordances */}
             <g
                 data-manipulated-variable="rings_currentRadius"
                 transform={`translate(${handleX} ${handleY}) scale(${handleScale})`}
             >
-                <circle r="14" fill={ACCENT} filter="url(#rings-handle-shadow)" />
+                <circle
+                    r="8"
+                    fill={ACCENT}
+                    stroke="#fff"
+                    strokeWidth="2"
+                    filter="url(#rings-handle-shadow)"
+                />
             </g>
 
             {/* Oversized hit area for the handle */}
             <circle
                 cx={handleX}
                 cy={handleY}
-                r="28"
+                r="24"
                 fill="transparent"
-                style={{ cursor: dragging ? "grabbing" : "grab", touchAction: "none" }}
+                style={{ cursor: dragging ? "grabbing" : "grab" }}
                 onPointerDown={(event) => {
                     event.currentTarget.setPointerCapture(event.pointerId);
                     setDragging(true);
@@ -262,22 +247,28 @@ function ConcentricRingsDrawing() {
                 onPointerLeave={() => setHovered(false)}
             />
 
-            {/* Current radius label */}
-            <text
-                x={handleX}
-                y={handleY - 24}
-                fill={ACCENT}
-                fontSize="12"
-                fontWeight="600"
-                textAnchor="middle"
+            {/* Readouts positioned below the circle */}
+            <g
+                fontSize="13"
                 style={{ fontVariantNumeric: "tabular-nums" }}
             >
-                r = {currentRadius.toFixed(1)}
-            </text>
+                <text x={CENTER.x - 50} y={VIEW_HEIGHT - 20} fill={INK} textAnchor="middle">
+                    r ={" "}
+                    <tspan fill={ACCENT} fontWeight="600" data-concept="rings_currentRadius_readout">
+                        {currentRadius.toFixed(1)}
+                    </tspan>
+                </text>
+                <text x={CENTER.x + 60} y={VIEW_HEIGHT - 20} fill={INK} textAnchor="middle">
+                    <tspan fill={ACCENT} fontWeight="600" data-concept="rings_ringCount">
+                        {numRings}
+                    </tspan>
+                    <tspan> ring{numRings !== 1 ? "s" : ""}</tspan>
+                </text>
+            </g>
 
             {/* R label at the edge */}
             <text
-                x={CENTER.x + MAX_RADIUS * PIXELS_PER_UNIT + 12}
+                x={CENTER.x + MAX_RADIUS * PIXELS_PER_UNIT + 10}
                 y={CENTER.y + 4}
                 fill={INK_QUIET}
                 fontSize="12"
@@ -291,7 +282,7 @@ function ConcentricRingsDrawing() {
 
 // ── Figure Shell ─────────────────────────────────────────────────────────────
 
-function ConcentricRingsFigure() {
+function BuildingCircleFigure() {
     const setVar = useSetVar();
 
     return (
@@ -300,9 +291,9 @@ function ConcentricRingsFigure() {
             onReset={() => {
                 setVar("rings_currentRadius", 0.2);
             }}
-            caption="Drag the teal handle outward from the center. Watch rings appear one by one, filling the circle from inside out."
+            caption="Drag the arrow tip outward from the center. Watch rings paint in one by one as the circle grows."
         >
-            <ConcentricRingsDrawing />
+            <BuildingCircleDrawing />
             <div className="px-6 pb-5">
                 <FigureSlider
                     varName="rings_currentRadius"
@@ -316,11 +307,11 @@ function ConcentricRingsFigure() {
                 steps={[
                     {
                         gesture: "drag-horizontal",
-                        label: "Drag the handle outward from the center",
-                        position: { x: "54%", y: "55%" },
+                        label: "Drag the arrow tip outward",
+                        position: { x: "54%", y: "50%" },
                         dragPath: {
                             type: "line",
-                            startOffset: { x: -20, y: 0 },
+                            startOffset: { x: -15, y: 0 },
                             endOffset: { x: 60, y: 0 },
                         },
                     },
@@ -399,7 +390,7 @@ export const slicingIntoRingsBlocks: ReactElement[] = [
     // ── Visualization ────────────────────────────────────────────────────────
     <StackLayout key="layout-rings-visualization" maxWidth="xl">
         <Block id="rings-visualization" padding="sm" hasVisualization>
-            <ConcentricRingsFigure />
+            <BuildingCircleFigure />
         </Block>
     </StackLayout>,
 
@@ -409,13 +400,7 @@ export const slicingIntoRingsBlocks: ReactElement[] = [
             <EditableParagraph id="para-rings-exploration" blockId="rings-exploration">
                 Drag the radius outward from the center. As you pull, watch rings
                 appear one by one. Each ring sits at a specific distance from the
-                center, and together they fill the entire circle. The outermost
-                ring you see is always at the current radius of{" "}
-                <InlineScrubbleNumber
-                    varName="rings_currentRadius"
-                    {...numberPropsFromDefinition(getVariableInfo("rings_currentRadius"))}
-                    formatValue={(v) => v.toFixed(1)}
-                />.
+                center, and together they fill the entire circle.
             </EditableParagraph>
         </Block>
     </StackLayout>,
@@ -444,7 +429,7 @@ export const slicingIntoRingsBlocks: ReactElement[] = [
                     position="terminal"
                     successMessage="— exactly! The circle is made of many thin rings stacked from the center outward"
                     failureMessage="— not quite."
-                    hint="Think about what appeared as you dragged the handle outward"
+                    hint="Think about what appeared as you dragged the arrow outward"
                 >
                     <InlineClozeChoice
                         varName="rings_answer_fills"

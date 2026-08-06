@@ -4,10 +4,14 @@
  *
  * The culminating aha moment: stacked ring-rectangles form a triangle with
  * base 2πR and height R, whose area equals πR² — the circle area formula.
+ *
+ * Ported faithfully from the approved live scene: dual visualization with
+ * circle (left) and stacking bars (right). Dragging the handle outward on
+ * the circle sweeps through the radii, adding bars to the triangle.
  */
 
 import { type ReactElement, useEffect, useRef, useState } from "react";
-import { StackLayout, SplitLayout } from "@/components/layouts";
+import { StackLayout } from "@/components/layouts";
 import { Block } from "@/components/templates";
 import {
     EditableH2,
@@ -37,16 +41,19 @@ import {
 // ── View Constants ───────────────────────────────────────────────────────────
 
 const VIEW_WIDTH = 560;
-const VIEW_HEIGHT = 400;
-const PADDING = 32;
+const VIEW_HEIGHT = 340;
+const PADDING = 24;
 
-// Drawing area boundaries
-const DRAW_LEFT = PADDING + 60; // Space for Y-axis label
-const DRAW_RIGHT = VIEW_WIDTH - PADDING - 20;
-const DRAW_TOP = PADDING + 40; // Space for formula
-const DRAW_BOTTOM = VIEW_HEIGHT - PADDING - 50; // Space for X-axis label and counter
-const DRAW_WIDTH = DRAW_RIGHT - DRAW_LEFT;
-const DRAW_HEIGHT = DRAW_BOTTOM - DRAW_TOP;
+// Circle area (left side)
+const CIRCLE_CX = 140;
+const CIRCLE_CY = 160;
+const MAX_CIRCLE_RADIUS = 65;
+
+// Triangle/bars area (right side)
+const BARS_ORIGIN_X = 310;
+const BARS_ORIGIN_Y = 280;
+const BARS_WIDTH = 180;
+const BARS_HEIGHT = 200;
 
 // Colors (from design language)
 const INK = "#334155";
@@ -54,10 +61,11 @@ const INK_STRUCTURE = "#64748B";
 const INK_QUIET = "#94A3B8";
 const ACCENT = "#62D0AD"; // Soft teal — ONE accent
 const ACCENT_FILL = "rgba(98, 208, 173, 0.18)";
+const ACCENT_RING = "rgba(98, 208, 173, 0.35)";
 
 // ── Bespoke Drawing Component ────────────────────────────────────────────────
 
-function TriangleStackDrawing() {
+function TriangleDualDrawing() {
     const setVar = useSetVar();
     const R = useVar<number>("R", 4);
     const numRings = useVar<number>("numRings", 5);
@@ -85,43 +93,47 @@ function TriangleStackDrawing() {
     }, [setVar, totalArea, visibleCount, R, numRings, dr, exactArea]);
 
     // Spring for smooth handle scale
-    const handleScale = useSpring(dragging || hovered ? 1.15 : 1, {
+    const handleScale = useSpring(dragging || hovered ? 1.2 : 1, {
         stiffness: 400,
         damping: 26,
     });
 
-    // Scale factors to map model coordinates to view coordinates
-    // X: circumference (0 to 2πR) maps to DRAW_WIDTH
-    // Y: radius (0 to R) maps to DRAW_HEIGHT (but inverted — bottom is 0, top is R)
-    const scaleX = DRAW_WIDTH / maxCirc;
-    const scaleY = DRAW_HEIGHT / R;
+    // Scale factors
+    const circlePxPerUnit = MAX_CIRCLE_RADIUS / R;
+    const sweepPx = sweepR * circlePxPerUnit;
+
+    // Bar dimensions
+    const barWidthTotal = BARS_WIDTH / numRings;
+    const barHeightScale = BARS_HEIGHT / maxCirc;
 
     // Build bars data
     const bars: Array<{
         index: number;
         width: number;
         height: number;
+        x: number;
         y: number;
         r: number;
     }> = [];
 
     for (let i = 0; i < visibleCount; i++) {
         const ringR = ringMidRadius(R, numRings, i);
-        const barWidth = circumference(ringR) * scaleX;
-        const barHeight = dr * scaleY;
-        // Bars stack from bottom (y = DRAW_BOTTOM) upward
-        const y = DRAW_BOTTOM - (i + 1) * barHeight;
-        bars.push({ index: i, width: barWidth, height: barHeight, y, r: ringR });
+        const ringCirc = circumference(ringR);
+        const barHeight = ringCirc * barHeightScale;
+        const x = BARS_ORIGIN_X + i * barWidthTotal;
+        const y = BARS_ORIGIN_Y - barHeight;
+        bars.push({ index: i, width: barWidthTotal - 1, height: barHeight, x, y, r: ringR });
     }
 
-    // Current ring label position (if there are visible rings)
+    // Current ring (last visible one)
     const currentRing = bars.length > 0 ? bars[bars.length - 1] : null;
 
-    // Handle position for sweep control (on the right edge of the triangle)
-    const handleY = DRAW_BOTTOM - (sweepR / R) * DRAW_HEIGHT;
-    const handleX = DRAW_RIGHT;
+    // Handle position on circle (at sweep radius, right side)
+    const handleAngle = 0; // radians — pointing right
+    const handleX = CIRCLE_CX + sweepPx * Math.cos(handleAngle);
+    const handleY = CIRCLE_CY - sweepPx * Math.sin(handleAngle);
 
-    // Pointer event handlers for dragging
+    // Pointer event handlers
     const svgPointFromEvent = (event: React.PointerEvent): { x: number; y: number } => {
         const svg = svgRef.current;
         if (!svg) return { x: 0, y: 0 };
@@ -135,10 +147,19 @@ function TriangleStackDrawing() {
     const handlePointerMove = (event: React.PointerEvent<SVGCircleElement>) => {
         if (!dragging) return;
         const point = svgPointFromEvent(event);
-        // Map Y position back to sweep value
-        const newSweep = R * (1 - (point.y - DRAW_TOP) / DRAW_HEIGHT);
+        // Calculate distance from circle center
+        const dx = point.x - CIRCLE_CX;
+        const dy = point.y - CIRCLE_CY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        // Map back to sweep value
+        const newSweep = distance / circlePxPerUnit;
         setVar("sweepR", clamp(newSweep, 0, R));
     };
+
+    // Triangle diagonal line for visualization
+    const maxBarHeight = maxCirc * barHeightScale;
+    const triangleEndX = BARS_ORIGIN_X + numRings * barWidthTotal;
+    const triangleEndY = BARS_ORIGIN_Y - maxBarHeight;
 
     return (
         <svg
@@ -146,7 +167,7 @@ function TriangleStackDrawing() {
             viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
             className="block w-full"
             role="img"
-            aria-label="Stacked ring-rectangles forming a triangle shape"
+            aria-label="Circle being swept outward with bars stacking to form a triangle"
         >
             <defs>
                 {/* Soft shadow for draggable handle */}
@@ -155,223 +176,237 @@ function TriangleStackDrawing() {
                 </filter>
             </defs>
 
-            {/* Frozen parameters indicator (carried over from previous section) */}
+            {/* Frozen parameters indicator */}
             <g style={{ fontVariantNumeric: "tabular-nums" }}>
-                <text
-                    x={VIEW_WIDTH - PADDING}
-                    y={20}
-                    fill={INK_QUIET}
-                    fontSize="11"
-                    textAnchor="end"
-                >
-                    R = {R} · {numRings} rings
-                </text>
-                <text
-                    x={VIEW_WIDTH - PADDING}
-                    y={33}
-                    fill={INK_QUIET}
-                    fontSize="9"
-                    textAnchor="end"
-                    fontStyle="italic"
-                >
-                    (from previous section)
+                <text x={VIEW_WIDTH - PADDING} y={20} fill={INK_QUIET} fontSize="11" textAnchor="end">
+                    R = {R} · {numRings} rings (from previous section)
                 </text>
             </g>
 
-            {/* Axis labels */}
-            <text
-                x={DRAW_LEFT + DRAW_WIDTH / 2}
-                y={VIEW_HEIGHT - 12}
-                fill={INK}
-                fontSize="12"
-                textAnchor="middle"
-            >
-                Circumference (width = 2πr)
-            </text>
-            <text
-                x={16}
-                y={DRAW_TOP + DRAW_HEIGHT / 2}
-                fill={INK}
-                fontSize="12"
-                textAnchor="middle"
-                transform={`rotate(-90, 16, ${DRAW_TOP + DRAW_HEIGHT / 2})`}
-            >
-                Radius (height = R)
-            </text>
-
-            {/* Draw area border (subtle) */}
-            <rect
-                x={DRAW_LEFT}
-                y={DRAW_TOP}
-                width={DRAW_WIDTH}
-                height={DRAW_HEIGHT}
-                fill="none"
-                stroke={INK_QUIET}
-                strokeWidth="1"
-                strokeDasharray="4 4"
-                opacity="0.5"
-            />
-
-            {/* The stacked bars (rectangles) — building the triangle */}
-            <g data-concept="triangleEmerges_accumulatedArea">
-                {bars.map((bar) => (
-                    <rect
-                        key={bar.index}
-                        x={DRAW_LEFT}
-                        y={bar.y}
-                        width={bar.width}
-                        height={Math.max(bar.height - 1, 1)}
-                        fill={ACCENT_FILL}
-                        stroke={ACCENT}
-                        strokeWidth="1.5"
-                        rx="1"
-                    />
-                ))}
-            </g>
-
-            {/* Triangle outline when complete — shows the ideal shape */}
-            {isComplete && (
-                <polygon
-                    points={`${DRAW_LEFT},${DRAW_BOTTOM} ${DRAW_LEFT + DRAW_WIDTH},${DRAW_BOTTOM} ${DRAW_LEFT},${DRAW_TOP}`}
+            {/* ── LEFT SIDE: Circle visualization ── */}
+            <g transform={`translate(${CIRCLE_CX}, ${CIRCLE_CY})`}>
+                {/* Full circle outline (target) */}
+                <circle
+                    r={MAX_CIRCLE_RADIUS}
                     fill="none"
-                    stroke={INK_STRUCTURE}
-                    strokeWidth="2"
-                    strokeDasharray="6 4"
-                    opacity="0.6"
+                    stroke={INK_QUIET}
+                    strokeWidth="1"
+                    strokeDasharray="4 3"
+                    opacity="0.5"
                 />
-            )}
 
-            {/* Current ring formula label */}
-            {currentRing && !isComplete && (
-                <g>
+                {/* Filled circle area (swept so far) */}
+                <circle
+                    r={sweepPx}
+                    fill={ACCENT_FILL}
+                    stroke="none"
+                />
+
+                {/* Current ring highlight */}
+                {visibleCount > 0 && !isComplete && (
+                    <circle
+                        r={Math.max(0, sweepPx - (dr * circlePxPerUnit) / 2)}
+                        fill="none"
+                        stroke={ACCENT}
+                        strokeWidth="3"
+                        opacity="0.7"
+                    />
+                )}
+
+                {/* Ring formula label */}
+                {!isComplete && sweepPx > 10 && (
                     <text
-                        x={DRAW_LEFT + currentRing.width + 8}
-                        y={currentRing.y + currentRing.height / 2 + 4}
+                        x={sweepPx / 2}
+                        y={-Math.max(sweepPx + 14, 45)}
                         fill={ACCENT}
                         fontSize="11"
                         fontStyle="italic"
-                    >
-                        2π × {currentRing.r.toFixed(1)} × dr
-                    </text>
-                </g>
-            )}
-
-            {/* Dimension labels when complete */}
-            {isComplete && (
-                <>
-                    {/* Base label: 2πR */}
-                    <text
-                        x={DRAW_LEFT + DRAW_WIDTH / 2}
-                        y={DRAW_BOTTOM + 20}
-                        fill={ACCENT}
-                        fontSize="13"
-                        fontWeight="600"
                         textAnchor="middle"
                     >
-                        Base = 2πR = {maxCirc.toFixed(1)}
+                        2πr × dr
                     </text>
-                    {/* Height label: R */}
-                    <text
-                        x={DRAW_LEFT - 8}
-                        y={DRAW_TOP + DRAW_HEIGHT / 2}
-                        fill={ACCENT}
-                        fontSize="13"
-                        fontWeight="600"
-                        textAnchor="end"
-                        transform={`rotate(-90, ${DRAW_LEFT - 8}, ${DRAW_TOP + DRAW_HEIGHT / 2})`}
-                    >
-                        Height = R = {R}
-                    </text>
-                </>
-            )}
+                )}
 
-            {/* Running area counter — positioned below the drawing */}
-            <g style={{ fontVariantNumeric: "tabular-nums" }}>
-                <text
-                    x={DRAW_LEFT}
-                    y={DRAW_BOTTOM + 38}
-                    fill={INK}
-                    fontSize="12"
+                {/* Draggable handle */}
+                <g
+                    data-manipulated-variable="sweepR"
+                    transform={`translate(${sweepPx}, 0) scale(${handleScale})`}
                 >
-                    Accumulated area:
+                    <circle
+                        r="10"
+                        fill={ACCENT}
+                        filter="url(#triangle-handle-shadow)"
+                        data-concept="sweepR"
+                    />
+                </g>
+
+                {/* Invisible hit area for handle (larger for touch) */}
+                <circle
+                    cx={sweepPx}
+                    cy={0}
+                    r="24"
+                    fill="transparent"
+                    style={{ cursor: dragging ? "grabbing" : "grab", touchAction: "none" }}
+                    onPointerDown={(event) => {
+                        event.currentTarget.setPointerCapture(event.pointerId);
+                        setDragging(true);
+                    }}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={() => setDragging(false)}
+                    onPointerCancel={() => setDragging(false)}
+                    onPointerEnter={() => setHovered(true)}
+                    onPointerLeave={() => setHovered(false)}
+                />
+            </g>
+
+            {/* Circle label */}
+            <text x={CIRCLE_CX} y={CIRCLE_CY + MAX_CIRCLE_RADIUS + 20} fill={INK} fontSize="11" textAnchor="middle">
+                Sweep from center outward
+            </text>
+
+            {/* ── RIGHT SIDE: Stacked bars (triangle) ── */}
+            <g>
+                {/* Axes */}
+                <line
+                    x1={BARS_ORIGIN_X}
+                    y1={BARS_ORIGIN_Y}
+                    x2={BARS_ORIGIN_X + BARS_WIDTH + 10}
+                    y2={BARS_ORIGIN_Y}
+                    stroke={INK_QUIET}
+                    strokeWidth="1"
+                />
+                <line
+                    x1={BARS_ORIGIN_X}
+                    y1={BARS_ORIGIN_Y}
+                    x2={BARS_ORIGIN_X}
+                    y2={BARS_ORIGIN_Y - BARS_HEIGHT - 10}
+                    stroke={INK_QUIET}
+                    strokeWidth="1"
+                />
+
+                {/* Stacked bars */}
+                <g data-concept="triangleEmerges_accumulatedArea">
+                    {bars.map((bar) => (
+                        <rect
+                            key={bar.index}
+                            x={bar.x}
+                            y={bar.y}
+                            width={bar.width}
+                            height={bar.height}
+                            fill={bar.index === bars.length - 1 && !isComplete ? ACCENT : ACCENT_FILL}
+                            stroke={ACCENT}
+                            strokeWidth="1.5"
+                            rx="1"
+                        />
+                    ))}
+                </g>
+
+                {/* Triangle diagonal line (showing ideal triangle) */}
+                {visibleCount > 0 && (
+                    <line
+                        x1={BARS_ORIGIN_X}
+                        y1={BARS_ORIGIN_Y}
+                        x2={BARS_ORIGIN_X + visibleCount * barWidthTotal}
+                        y2={BARS_ORIGIN_Y - (currentRing?.height ?? 0)}
+                        stroke={ACCENT}
+                        strokeWidth="1.5"
+                        strokeDasharray="4 3"
+                        opacity="0.6"
+                    />
+                )}
+
+                {/* Full triangle outline when complete */}
+                {isComplete && (
+                    <polygon
+                        points={`${BARS_ORIGIN_X},${BARS_ORIGIN_Y} ${triangleEndX},${BARS_ORIGIN_Y} ${BARS_ORIGIN_X},${triangleEndY}`}
+                        fill="none"
+                        stroke={INK_STRUCTURE}
+                        strokeWidth="2"
+                        strokeDasharray="6 4"
+                        opacity="0.7"
+                    />
+                )}
+
+                {/* Dimension labels when complete */}
+                {isComplete && (
+                    <>
+                        <text
+                            x={BARS_ORIGIN_X + BARS_WIDTH / 2}
+                            y={BARS_ORIGIN_Y + 18}
+                            fill={ACCENT}
+                            fontSize="12"
+                            fontWeight="600"
+                            textAnchor="middle"
+                        >
+                            Base = 2πR = {maxCirc.toFixed(1)}
+                        </text>
+                        <text
+                            x={BARS_ORIGIN_X - 8}
+                            y={BARS_ORIGIN_Y - BARS_HEIGHT / 2}
+                            fill={ACCENT}
+                            fontSize="12"
+                            fontWeight="600"
+                            textAnchor="end"
+                            transform={`rotate(-90, ${BARS_ORIGIN_X - 8}, ${BARS_ORIGIN_Y - BARS_HEIGHT / 2})`}
+                        >
+                            Height = R
+                        </text>
+                    </>
+                )}
+
+                {/* Axis labels */}
+                <text
+                    x={BARS_ORIGIN_X + BARS_WIDTH / 2}
+                    y={BARS_ORIGIN_Y + 35}
+                    fill={INK}
+                    fontSize="10"
+                    textAnchor="middle"
+                >
+                    ring index →
                 </text>
                 <text
-                    x={DRAW_LEFT + 108}
-                    y={DRAW_BOTTOM + 38}
+                    x={BARS_ORIGIN_X - 12}
+                    y={BARS_ORIGIN_Y - BARS_HEIGHT / 2}
+                    fill={INK}
+                    fontSize="10"
+                    textAnchor="middle"
+                    transform={`rotate(-90, ${BARS_ORIGIN_X - 12}, ${BARS_ORIGIN_Y - BARS_HEIGHT / 2})`}
+                >
+                    circumference →
+                </text>
+            </g>
+
+            {/* Running area counter */}
+            <g style={{ fontVariantNumeric: "tabular-nums" }}>
+                <text x={BARS_ORIGIN_X + 10} y={50} fill={INK} fontSize="12">
+                    Area =
+                </text>
+                <text
+                    x={BARS_ORIGIN_X + 52}
+                    y={50}
                     fill={ACCENT}
-                    fontSize="13"
+                    fontSize="14"
                     fontWeight="600"
                     data-concept="triangleEmerges_accumulatedArea"
                 >
-                    {totalArea.toFixed(2)}
+                    {totalArea.toFixed(1)}
                 </text>
                 {isComplete && (
-                    <text
-                        x={DRAW_LEFT + 170}
-                        y={DRAW_BOTTOM + 38}
-                        fill={INK_STRUCTURE}
-                        fontSize="12"
-                    >
-                        = πR² = π × {R}² ≈ {exactArea.toFixed(2)}
+                    <text x={BARS_ORIGIN_X + 105} y={50} fill={INK_STRUCTURE} fontSize="12">
+                        ≈ πR² = {exactArea.toFixed(1)}
+                    </text>
+                )}
+                {!isComplete && (
+                    <text x={BARS_ORIGIN_X + 105} y={50} fill={INK_QUIET} fontSize="11" fontStyle="italic">
+                        → πR²
                     </text>
                 )}
             </g>
 
-            {/* Sweep position indicator line */}
-            <line
-                x1={DRAW_LEFT}
-                x2={DRAW_RIGHT}
-                y1={handleY}
-                y2={handleY}
-                stroke={ACCENT}
-                strokeWidth="1.5"
-                strokeDasharray="4 3"
-                opacity="0.6"
-            />
-
-            {/* Draggable handle for sweep position */}
-            <g
-                data-manipulated-variable="sweepR"
-                transform={`translate(${handleX}, ${handleY}) scale(${handleScale})`}
-            >
-                <circle
-                    r="12"
-                    fill={ACCENT}
-                    filter="url(#triangle-handle-shadow)"
-                    data-concept="sweepR"
-                />
-                {/* Arrow indicator inside handle */}
-                <path
-                    d="M -4 -3 L 0 -6 L 4 -3 M -4 3 L 0 6 L 4 3"
-                    stroke="white"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    fill="none"
-                />
-            </g>
-
-            {/* Invisible hit area for the handle (larger for touch) */}
-            <circle
-                cx={handleX}
-                cy={handleY}
-                r="24"
-                fill="transparent"
-                style={{ cursor: dragging ? "grabbing" : "grab", touchAction: "none" }}
-                onPointerDown={(event) => {
-                    event.currentTarget.setPointerCapture(event.pointerId);
-                    setDragging(true);
-                }}
-                onPointerMove={handlePointerMove}
-                onPointerUp={() => setDragging(false)}
-                onPointerCancel={() => setDragging(false)}
-                onPointerEnter={() => setHovered(true)}
-                onPointerLeave={() => setHovered(false)}
-            />
-
             {/* Sweep position readout */}
             <text
-                x={handleX + 16}
-                y={handleY + 4}
+                x={CIRCLE_CX + sweepPx + 18}
+                y={CIRCLE_CY + 4}
                 fill={INK}
                 fontSize="11"
                 style={{ fontVariantNumeric: "tabular-nums" }}
@@ -386,7 +421,6 @@ function TriangleStackDrawing() {
 
 function TriangleStackFigure() {
     const setVar = useSetVar();
-    const R = useVar<number>("R", 4);
 
     return (
         <Figure
@@ -394,9 +428,9 @@ function TriangleStackFigure() {
             onReset={() => {
                 setVar("sweepR", 1.2);
             }}
-            caption="Sweep through the radii using the slider. Bars stack upward, widening with r, to form a triangle with base 2πR and height R."
+            caption="Drag the teal handle outward on the circle. Watch bars stack on the right, widening with r, forming a triangle."
         >
-            <TriangleStackDrawing />
+            <TriangleDualDrawing />
             <div className="px-6 pb-5">
                 <FigureSlider
                     varName="sweepR"
@@ -409,13 +443,13 @@ function TriangleStackFigure() {
                 hintKey="triangle-emerges-drag"
                 steps={[
                     {
-                        gesture: "drag-vertical",
-                        label: "Drag up to sweep outward through the radii",
-                        position: { x: "91%", y: "58%" },
+                        gesture: "drag-horizontal",
+                        label: "Drag the handle outward",
+                        position: { x: "32%", y: "52%" },
                         dragPath: {
                             type: "line",
-                            startOffset: { x: 0, y: 25 },
-                            endOffset: { x: 0, y: -35 },
+                            startOffset: { x: -15, y: 0 },
+                            endOffset: { x: 30, y: 0 },
                         },
                     },
                 ]}
@@ -438,7 +472,7 @@ export const triangleEmergesBlocks: ReactElement[] = [
     <StackLayout key="layout-triangle-emerges-intro" maxWidth="xl">
         <Block id="triangle-emerges-intro" padding="sm">
             <EditableParagraph id="para-triangle-emerges-intro" blockId="triangle-emerges-intro">
-                You spotted the triangle. Now let's see why it matters. Look at its
+                Here's the aha moment. The stacked rectangles form a triangle. Look at its
                 dimensions: the base is the longest rectangle — the outer circumference, 2πR.
                 The height is the full radius R.
             </EditableParagraph>
@@ -454,9 +488,10 @@ export const triangleEmergesBlocks: ReactElement[] = [
     <StackLayout key="layout-triangle-emerges-guidance" maxWidth="xl">
         <Block id="triangle-emerges-guidance" padding="sm">
             <EditableParagraph id="para-triangle-emerges-guidance" blockId="triangle-emerges-guidance">
-                Drag the handle upward to sweep from the center outward. Watch each ring's area
-                (2πr × dr) stack one by one. The running total shows your accumulated area
-                climbing toward a familiar value.
+                Drag the slider to sweep from the center outward. Watch each ring's area
+                (2πr × dr) add to the stack. The bars grow wider as r increases, forming that
+                characteristic triangular profile. The running total shows your accumulated
+                area climbing toward a familiar value.
             </EditableParagraph>
         </Block>
     </StackLayout>,

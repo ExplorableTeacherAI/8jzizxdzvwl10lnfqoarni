@@ -17,7 +17,8 @@
     "R": "Circle radius, carried over from previous section, frozen/locked at 4",
     "unwrapping_dr": "Derived: thickness of each ring = R / numRings",
     "unwrapping_totalArea": "Derived: sum of all rectangle areas, approaching πR²",
-    "unwrapping_outerCircumference": "Derived: 2πR, width of the outermost rectangle"
+    "unwrapping_outerCircumference": "Derived: 2πR, width of the outermost rectangle",
+    "unwrapping_errorPercent": "Derived: percentage error between rectangle sum and exact πR²"
   },
   "assertions": [
     {

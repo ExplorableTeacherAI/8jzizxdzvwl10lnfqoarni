@@ -4,6 +4,11 @@
  *
  * Second section: visualizing how concentric rings become rectangles
  * when cut and unrolled, and how these rectangles stack into a triangle.
+ *
+ * Ported from approved live scene: Shows three views side by side:
+ * 1. Circle divided into colored rings (left)
+ * 2. Horizontal strips stacked — the unrolled rectangles (middle)
+ * 3. Stepped triangle — showing the triangle approximation (right)
  */
 
 import { type ReactElement, useEffect } from "react";
@@ -33,30 +38,36 @@ import {
 
 // ── View constants ───────────────────────────────────────────────────────────
 
-const VIEW_WIDTH = 560;
-const VIEW_HEIGHT = 380;
-const CIRCLE_CENTER_X = 130;
-const CIRCLE_CENTER_Y = 170;
-const CIRCLE_VISUAL_RADIUS = 100; // pixels
+const VIEW_WIDTH = 440;
+const VIEW_HEIGHT = 240;
 
-const RECT_STACK_LEFT = 280;
-const RECT_STACK_BOTTOM = 340;
-const RECT_MAX_WIDTH = 240; // max width for outermost rectangle
-const RECT_SCALE_HEIGHT = 20; // pixels per unit of dr (scaled for visibility)
+// Circle group position
+const CIRCLE_CENTER_X = 70;
+const CIRCLE_CENTER_Y = 120;
+const CIRCLE_RADIUS_PX = 55;
+
+// Strips group position (horizontal rectangles showing unrolled widths)
+const STRIPS_CENTER_X = 190;
+const STRIPS_CENTER_Y = 120;
+const STRIPS_MAX_WIDTH = 80; // Max strip width for outermost circumference
+
+// Triangle group position (stepped approximation)
+const TRIANGLE_CENTER_X = 340;
+const TRIANGLE_CENTER_Y = 120;
+const TRIANGLE_BASE_WIDTH = 80;
 
 // Colors
 const INK = "#334155";
 const INK_STRUCTURE = "#64748B";
-const INK_QUIET = "#CBD5E1";
-const ACCENT = "#62D0AD";
+const ACCENT = "#F59E0B"; // Amber for the highlighted ring/dr indicator
 
 // ── Helper: generate color gradient for rings ────────────────────────────────
 
 const ringColor = (index: number, total: number): string => {
-    // Gradient from light teal to full accent
-    const t = total > 1 ? index / (total - 1) : 0;
-    const lightness = 85 - t * 35; // 85% to 50%
-    return `hsl(160, 55%, ${lightness}%)`;
+    // Gradient from teal-ish to deeper teal (matching live scene)
+    const hue = 170 + (index / total) * 30; // 170-200 range
+    const lightness = 55 + (index / total) * 20; // 55%-75%
+    return `hsl(${hue}, 50%, ${lightness}%)`;
 };
 
 // ── The bespoke drawing ──────────────────────────────────────────────────────
@@ -72,244 +83,153 @@ function UnwrappingRingsDrawing() {
     const outerCirc = circumference(R);
     const exactArea = circleArea(R);
     const rings = generateUnwrappingRings(R, numRings);
+    const errorPercent = Math.abs(exactArea - totalArea) / exactArea * 100;
 
     useEffect(() => {
         setVar("unwrapping_dr", dr);
         setVar("unwrapping_totalArea", totalArea);
         setVar("unwrapping_outerCircumference", outerCirc);
-    }, [dr, totalArea, outerCirc, setVar]);
+        setVar("unwrapping_errorPercent", errorPercent);
+    }, [dr, totalArea, outerCirc, errorPercent, setVar]);
 
     // Scale factors for visualization
-    const pxPerUnit = CIRCLE_VISUAL_RADIUS / R;
-    const rectWidthScale = RECT_MAX_WIDTH / outerCirc;
+    const pxPerUnit = CIRCLE_RADIUS_PX / R;
+    const totalHeight = R;
+    const stripHeightScale = (CIRCLE_RADIUS_PX * 2) / totalHeight; // Map R to visual height
+
+    // Highlight the middle ring to show dr
+    const highlightRingIndex = Math.floor(numRings / 2);
+    const showDrHighlight = numRings <= 12;
 
     return (
         <svg
             viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
             className="block w-full"
             role="img"
-            aria-label={`Circle divided into ${numRings} rings on left, unwrapped rectangles forming a triangle on right`}
+            aria-label={`Circle divided into ${numRings} rings, unrolled strips, and stepped triangle approximation`}
         >
-            {/* ─── Left side: Circle with concentric rings ─── */}
+            {/* ─── Left: Circle with concentric rings ─── */}
             <g data-concept="numRings">
                 {/* Draw rings from outside in so inner rings appear on top */}
                 {[...rings].reverse().map((ring, reverseI) => {
-                    const i = numRings - 1 - reverseI; // original index
-                    const innerPx = ring.innerRadius * pxPerUnit;
-                    const outerPx = ring.outerRadius * pxPerUnit;
-
-                    // Create annulus path (ring shape)
-                    const cx = CIRCLE_CENTER_X;
-                    const cy = CIRCLE_CENTER_Y;
+                    const i = numRings - 1 - reverseI;
+                    const rOuter = ring.outerRadius * pxPerUnit;
 
                     return (
-                        <g key={i}>
-                            {/* Ring as annulus using path with arc */}
-                            <path
-                                d={`
-                                    M ${cx + outerPx} ${cy}
-                                    A ${outerPx} ${outerPx} 0 1 1 ${cx - outerPx} ${cy}
-                                    A ${outerPx} ${outerPx} 0 1 1 ${cx + outerPx} ${cy}
-                                    ${innerPx > 0 ? `
-                                        M ${cx + innerPx} ${cy}
-                                        A ${innerPx} ${innerPx} 0 1 0 ${cx - innerPx} ${cy}
-                                        A ${innerPx} ${innerPx} 0 1 0 ${cx + innerPx} ${cy}
-                                    ` : ''}
-                                `}
-                                fill={ringColor(i, numRings)}
-                                fillRule="evenodd"
-                            />
-                        </g>
-                    );
-                })}
-                {/* Center point */}
-                <circle
-                    cx={CIRCLE_CENTER_X}
-                    cy={CIRCLE_CENTER_Y}
-                    r="3"
-                    fill={INK_STRUCTURE}
-                />
-                {/* Outer circle stroke */}
-                <circle
-                    cx={CIRCLE_CENTER_X}
-                    cy={CIRCLE_CENTER_Y}
-                    r={CIRCLE_VISUAL_RADIUS}
-                    fill="none"
-                    stroke={INK_STRUCTURE}
-                    strokeWidth="2"
-                />
-                {/* Ring boundary lines */}
-                {rings.slice(0, -1).map((ring, i) => (
-                    <circle
-                        key={`boundary-${i}`}
-                        cx={CIRCLE_CENTER_X}
-                        cy={CIRCLE_CENTER_Y}
-                        r={ring.outerRadius * pxPerUnit}
-                        fill="none"
-                        stroke="white"
-                        strokeWidth="1"
-                    />
-                ))}
-            </g>
-
-            {/* Scissors cut indicator */}
-            <line
-                x1={CIRCLE_CENTER_X}
-                y1={CIRCLE_CENTER_Y}
-                x2={CIRCLE_CENTER_X + CIRCLE_VISUAL_RADIUS + 10}
-                y2={CIRCLE_CENTER_Y}
-                stroke={ACCENT}
-                strokeWidth="2"
-                strokeDasharray="4 3"
-                strokeLinecap="round"
-            />
-            <text
-                x={CIRCLE_CENTER_X + CIRCLE_VISUAL_RADIUS + 15}
-                y={CIRCLE_CENTER_Y + 4}
-                fill={INK}
-                fontSize="11"
-            >
-                cut
-            </text>
-
-            {/* Label: R */}
-            <text
-                x={CIRCLE_CENTER_X}
-                y={CIRCLE_CENTER_Y + CIRCLE_VISUAL_RADIUS + 25}
-                fill={INK_STRUCTURE}
-                fontSize="12"
-                textAnchor="middle"
-                fontStyle="italic"
-            >
-                R = {R}
-            </text>
-
-            {/* ─── Right side: Stacked rectangles forming triangle ─── */}
-            <g data-concept="unwrapping_totalArea">
-                {rings.map((ring, i) => {
-                    const rectWidth = ring.circumference * rectWidthScale;
-                    const rectHeight = Math.max(2, (RECT_SCALE_HEIGHT * dr));
-                    const y = RECT_STACK_BOTTOM - (i + 1) * rectHeight;
-                    const x = RECT_STACK_LEFT;
-
-                    return (
-                        <g key={`rect-${i}`}>
-                            <rect
-                                x={x}
-                                y={y}
-                                width={rectWidth}
-                                height={rectHeight}
-                                fill={ringColor(i, numRings)}
-                                stroke={INK_QUIET}
-                                strokeWidth="0.5"
-                            />
-                        </g>
-                    );
-                })}
-
-                {/* Triangle outline overlay (shows the approaching shape) */}
-                <path
-                    d={`M ${RECT_STACK_LEFT} ${RECT_STACK_BOTTOM}
-                        L ${RECT_STACK_LEFT + RECT_MAX_WIDTH} ${RECT_STACK_BOTTOM}
-                        L ${RECT_STACK_LEFT} ${RECT_STACK_BOTTOM - numRings * Math.max(2, RECT_SCALE_HEIGHT * dr)}
-                        Z`}
-                    fill="none"
-                    stroke={ACCENT}
-                    strokeWidth="2"
-                    strokeDasharray="6 4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    opacity="0.6"
-                />
-            </g>
-
-            {/* ─── Labels for rectangles ─── */}
-            {/* Width label: 2πr (on widest/top rectangle) */}
-            {numRings > 0 && (
-                <>
-                    <text
-                        x={RECT_STACK_LEFT + RECT_MAX_WIDTH / 2}
-                        y={RECT_STACK_BOTTOM + 20}
-                        fill={ACCENT}
-                        fontSize="12"
-                        textAnchor="middle"
-                        fontWeight="600"
-                    >
-                        width = 2πr
-                    </text>
-                    {/* Height label: dr */}
-                    <g>
-                        <line
-                            x1={RECT_STACK_LEFT - 15}
-                            y1={RECT_STACK_BOTTOM}
-                            x2={RECT_STACK_LEFT - 15}
-                            y2={RECT_STACK_BOTTOM - Math.max(2, RECT_SCALE_HEIGHT * dr)}
-                            stroke={INK_STRUCTURE}
-                            strokeWidth="1.5"
-                            markerStart="url(#arrowUp)"
-                            markerEnd="url(#arrowDown)"
+                        <circle
+                            key={`ring-${i}`}
+                            cx={CIRCLE_CENTER_X}
+                            cy={CIRCLE_CENTER_Y}
+                            r={rOuter}
+                            fill={ringColor(i, numRings)}
+                            stroke="#fff"
+                            strokeWidth="0.5"
                         />
+                    );
+                })}
+
+                {/* Highlight one ring to show dr when few rings */}
+                {showDrHighlight && numRings > 0 && (
+                    <>
+                        {/* Arc showing thickness dr on the highlighted ring */}
+                        <circle
+                            cx={CIRCLE_CENTER_X}
+                            cy={CIRCLE_CENTER_Y}
+                            r={rings[highlightRingIndex]?.midRadius * pxPerUnit || 0}
+                            fill="none"
+                            stroke={ACCENT}
+                            strokeWidth={dr * pxPerUnit * 0.8}
+                            strokeDasharray={`${Math.PI * (rings[highlightRingIndex]?.midRadius || 0) * pxPerUnit * 0.3} 1000`}
+                            strokeLinecap="round"
+                        />
+                        {/* dr label */}
                         <text
-                            x={RECT_STACK_LEFT - 25}
-                            y={RECT_STACK_BOTTOM - Math.max(2, RECT_SCALE_HEIGHT * dr) / 2 + 4}
-                            fill={INK}
-                            fontSize="11"
-                            textAnchor="end"
+                            x={CIRCLE_CENTER_X + (rings[highlightRingIndex]?.outerRadius || 0) * pxPerUnit + 6}
+                            y={CIRCLE_CENTER_Y + 4}
+                            fill={INK_STRUCTURE}
+                            fontSize="10"
                             fontStyle="italic"
                         >
                             dr
                         </text>
-                    </g>
-                </>
-            )}
-
-            {/* ─── Readouts ─── */}
-            <g fontSize="12" style={{ fontVariantNumeric: "tabular-nums" }}>
-                {/* Number of rings */}
-                <text x="30" y="30" fill={INK}>
-                    Rings: <tspan fontWeight="600" fill={ACCENT}>{numRings}</tspan>
-                </text>
-                {/* Ring thickness */}
-                <text x="30" y="50" fill={INK}>
-                    dr = R/{numRings} ={" "}
-                    <tspan data-concept="unwrapping_dr" fontWeight="600">{dr.toFixed(2)}</tspan>
-                </text>
-                {/* Total area */}
-                <text x="280" y="30" fill={INK}>
-                    Total area ≈{" "}
-                    <tspan fontWeight="600" fill={ACCENT}>{totalArea.toFixed(2)}</tspan>
-                </text>
-                {/* Exact area comparison */}
-                <text x="280" y="50" fill={INK_STRUCTURE}>
-                    πR² = {exactArea.toFixed(2)}
-                </text>
+                    </>
+                )}
             </g>
 
-            {/* Arrow markers */}
-            <defs>
-                <marker
-                    id="arrowUp"
-                    viewBox="0 0 10 10"
-                    refX="5"
-                    refY="10"
-                    markerWidth="6"
-                    markerHeight="6"
-                    orient="auto"
-                >
-                    <path d="M 0 10 L 5 0 L 10 10" fill="none" stroke={INK_STRUCTURE} strokeWidth="1.5" />
-                </marker>
-                <marker
-                    id="arrowDown"
-                    viewBox="0 0 10 10"
-                    refX="5"
-                    refY="0"
-                    markerWidth="6"
-                    markerHeight="6"
-                    orient="auto"
-                >
-                    <path d="M 0 0 L 5 10 L 10 0" fill="none" stroke={INK_STRUCTURE} strokeWidth="1.5" />
-                </marker>
-            </defs>
+            {/* ─── Middle: Horizontal strips (unrolled rectangles) ─── */}
+            <g data-concept="unwrapping_totalArea">
+                {rings.map((ring, i) => {
+                    // Width proportional to circumference at this radius
+                    const stripWidth = (ring.circumference / outerCirc) * STRIPS_MAX_WIDTH;
+                    const rectHeight = Math.max((dr * stripHeightScale) - 0.5, 0.5);
+                    const y = STRIPS_CENTER_Y - (totalHeight * stripHeightScale) / 2 + i * dr * stripHeightScale;
+                    const x = STRIPS_CENTER_X - STRIPS_MAX_WIDTH / 2;
+
+                    return (
+                        <rect
+                            key={`strip-${i}`}
+                            x={x}
+                            y={y}
+                            width={stripWidth}
+                            height={rectHeight}
+                            fill={ringColor(i, numRings)}
+                            stroke="#fff"
+                            strokeWidth="0.3"
+                        />
+                    );
+                })}
+            </g>
+
+            {/* ─── Right: Stepped triangle approximation ─── */}
+            <g>
+                {rings.map((ring, i) => {
+                    // Width proportional to radius fraction (r/R)
+                    const frac = ring.midRadius / R;
+                    const stepWidth = frac * TRIANGLE_BASE_WIDTH;
+                    const rectHeight = Math.max((dr * stripHeightScale) - 0.5, 0.5);
+                    const y = TRIANGLE_CENTER_Y - (totalHeight * stripHeightScale) / 2 + i * dr * stripHeightScale;
+                    const x = TRIANGLE_CENTER_X - TRIANGLE_BASE_WIDTH / 2;
+
+                    return (
+                        <rect
+                            key={`tri-step-${i}`}
+                            x={x}
+                            y={y}
+                            width={stepWidth}
+                            height={rectHeight}
+                            fill={ringColor(i, numRings)}
+                            stroke="#fff"
+                            strokeWidth="0.3"
+                        />
+                    );
+                })}
+
+                {/* Dashed triangle outline showing the ideal shape */}
+                <path
+                    d={`M ${TRIANGLE_CENTER_X - TRIANGLE_BASE_WIDTH / 2} ${TRIANGLE_CENTER_Y - (totalHeight * stripHeightScale) / 2}
+                        L ${TRIANGLE_CENTER_X + TRIANGLE_BASE_WIDTH / 2} ${TRIANGLE_CENTER_Y + (totalHeight * stripHeightScale) / 2}
+                        L ${TRIANGLE_CENTER_X - TRIANGLE_BASE_WIDTH / 2} ${TRIANGLE_CENTER_Y + (totalHeight * stripHeightScale) / 2}
+                        Z`}
+                    fill="none"
+                    stroke={INK_STRUCTURE}
+                    strokeWidth="0.5"
+                    strokeDasharray="2,2"
+                    strokeLinejoin="round"
+                />
+            </g>
+
+            {/* ─── Readouts ─── */}
+            <g fontSize="11" style={{ fontVariantNumeric: "tabular-nums" }}>
+                {/* Ring count label */}
+                <text x="24" y="24" fill={INK}>
+                    Rings:{" "}
+                    <tspan fontWeight="600">{numRings}</tspan>
+                </text>
+                {/* Error percentage */}
+                <text x="24" y="40" fill={INK_STRUCTURE}>
+                    Error: ~{errorPercent.toFixed(1)}%
+                </text>
+            </g>
         </svg>
     );
 }
@@ -326,15 +246,15 @@ function UnwrappingRingsFigure() {
                 onReset={() => {
                     setVar("numRings", 5);
                 }}
-                caption="A circle sliced into rings, with each ring cut and unrolled into a rectangle. The rectangles stack to form a triangle shape."
+                caption="A circle sliced into rings (left), unrolled as horizontal strips (middle), rearranged to show the emerging triangle (right)."
             >
                 <UnwrappingRingsDrawing />
                 <div className="px-6 pb-5">
                     <FigureSlider
                         varName="numRings"
-                        label="Number of rings"
+                        label="Rings"
                         {...numberPropsFromDefinition(getVariableInfo("numRings"))}
-                        formatValue={(v) => `${Math.round(v)} rings`}
+                        formatValue={(v) => `${Math.round(v)}`}
                     />
                 </div>
                 <InteractionHintSequence
