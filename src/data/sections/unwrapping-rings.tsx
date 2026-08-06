@@ -59,15 +59,16 @@ const TRIANGLE_BASE_WIDTH = 80;
 // Colors
 const INK = "#334155";
 const INK_STRUCTURE = "#64748B";
-const ACCENT = "#F59E0B"; // Amber for the highlighted ring/dr indicator
+const ACCENT = "#62D0AD"; // Soft Teal — the ONE accent
 
 // ── Helper: generate color gradient for rings ────────────────────────────────
 
 const ringColor = (index: number, total: number): string => {
-    // Gradient from teal-ish to deeper teal (matching live scene)
-    const hue = 170 + (index / total) * 30; // 170-200 range
-    const lightness = 55 + (index / total) * 20; // 55%-75%
-    return `hsl(${hue}, 50%, ${lightness}%)`;
+    // Quiet teal gradient — fills whisper, strokes carry identity
+    const hue = 165; // Consistent teal hue
+    const saturation = 35; // Muted
+    const lightness = 78 - (index / Math.max(1, total - 1)) * 20; // 78% (lightest/inner) to 58% (darkest/outer)
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 };
 
 // ── The bespoke drawing ──────────────────────────────────────────────────────
@@ -102,12 +103,25 @@ function UnwrappingRingsDrawing() {
     const showDrHighlight = numRings <= 12;
 
     return (
-        <svg
-            viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
-            className="block w-full"
-            role="img"
-            aria-label={`Circle divided into ${numRings} rings, unrolled strips, and stepped triangle approximation`}
-        >
+        <div>
+            {/* Readouts above the drawing surface */}
+            <div
+                className="flex justify-between px-4 pb-2 text-xs"
+                style={{ fontVariantNumeric: "tabular-nums", color: INK }}
+            >
+                <span>
+                    Rings: <span className="font-semibold">{numRings}</span>
+                </span>
+                <span style={{ color: INK_STRUCTURE }}>
+                    Error: ~{errorPercent.toFixed(1)}%
+                </span>
+            </div>
+            <svg
+                viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
+                className="block w-full"
+                role="img"
+                aria-label={`Circle divided into ${numRings} rings, unrolled strips, and stepped triangle approximation`}
+            >
             {/* ─── Left: Circle with concentric rings ─── */}
             <g data-concept="numRings">
                 {/* Draw rings from outside in so inner rings appear on top */}
@@ -131,23 +145,24 @@ function UnwrappingRingsDrawing() {
                 {/* Highlight one ring to show dr when few rings */}
                 {showDrHighlight && numRings > 0 && (
                     <>
-                        {/* Arc showing thickness dr on the highlighted ring */}
+                        {/* Arc showing thickness dr on the highlighted ring — accent at heavier stroke */}
                         <circle
                             cx={CIRCLE_CENTER_X}
                             cy={CIRCLE_CENTER_Y}
                             r={rings[highlightRingIndex]?.midRadius * pxPerUnit || 0}
                             fill="none"
                             stroke={ACCENT}
-                            strokeWidth={dr * pxPerUnit * 0.8}
-                            strokeDasharray={`${Math.PI * (rings[highlightRingIndex]?.midRadius || 0) * pxPerUnit * 0.3} 1000`}
+                            strokeWidth={Math.max(3, dr * pxPerUnit * 0.85)}
+                            strokeDasharray={`${Math.PI * (rings[highlightRingIndex]?.midRadius || 0) * pxPerUnit * 0.35} 1000`}
                             strokeLinecap="round"
                         />
-                        {/* dr label */}
+                        {/* dr label — ink color for readability, positioned clearly */}
                         <text
-                            x={CIRCLE_CENTER_X + (rings[highlightRingIndex]?.outerRadius || 0) * pxPerUnit + 6}
+                            x={CIRCLE_CENTER_X + (rings[highlightRingIndex]?.outerRadius || 0) * pxPerUnit + 8}
                             y={CIRCLE_CENTER_Y + 4}
-                            fill={INK_STRUCTURE}
-                            fontSize="10"
+                            fill={INK}
+                            fontSize="12"
+                            fontWeight="500"
                             fontStyle="italic"
                         >
                             dr
@@ -218,19 +233,8 @@ function UnwrappingRingsDrawing() {
                 />
             </g>
 
-            {/* ─── Readouts ─── */}
-            <g fontSize="11" style={{ fontVariantNumeric: "tabular-nums" }}>
-                {/* Ring count label */}
-                <text x="24" y="24" fill={INK}>
-                    Rings:{" "}
-                    <tspan fontWeight="600">{numRings}</tspan>
-                </text>
-                {/* Error percentage */}
-                <text x="24" y="40" fill={INK_STRUCTURE}>
-                    Error: ~{errorPercent.toFixed(1)}%
-                </text>
-            </g>
         </svg>
+        </div>
     );
 }
 
