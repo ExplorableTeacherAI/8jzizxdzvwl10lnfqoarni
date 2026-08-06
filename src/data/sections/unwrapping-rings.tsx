@@ -379,7 +379,7 @@ export const unwrappingRingsBlocks: ReactElement[] = [
     <StackLayout key="layout-unwrapping-rings-explanation" maxWidth="xl">
         <Block id="unwrapping-rings-explanation" padding="sm">
             <EditableParagraph id="para-unwrapping-rings-explanation" blockId="unwrapping-rings-explanation">
-                The width of that rectangle is the circumference at that radius — 2πr. The height is just the thickness of the ring. Adjust the slider to change how many rings divide the circle. As you add more rings, each one gets thinner, and the stack of rectangles on the right shows a cleaner approximation of... something familiar.
+                The width of that rectangle is the circumference at that radius — 2πr. The height is just the thickness of the ring. Adjust the slider to change how many rings divide the circle. As you add more rings, each one gets thinner, and the stack of rectangles shows a cleaner approximation of something familiar.
             </EditableParagraph>
         </Block>
     </StackLayout>,
@@ -390,17 +390,25 @@ export const unwrappingRingsBlocks: ReactElement[] = [
         </Block>
     </StackLayout>,
 
+    <StackLayout key="layout-unwrapping-rings-observation" maxWidth="xl">
+        <Block id="unwrapping-rings-observation" padding="sm">
+            <EditableParagraph id="para-unwrapping-rings-observation" blockId="unwrapping-rings-observation">
+                Do you see it forming? The rectangles are arranging themselves into a shape you already know.
+            </EditableParagraph>
+        </Block>
+    </StackLayout>,
+
     <StackLayout key="layout-unwrapping-rings-question" maxWidth="xl">
         <Block id="unwrapping-rings-question" padding="sm">
             <EditableParagraph id="para-unwrapping-rings-question" blockId="unwrapping-rings-question">
-                Do you see it forming? The rectangles are arranging themselves into a shape you already know how to calculate. That shape is a{" "}
+                What shape do the stacked rectangles form? A{" "}
                 <InlineFeedback
                     varName="unwrapping_shapeAnswer"
                     correctValue="triangle"
                     position="terminal"
                     successMessage="— exactly! A triangle with base 2πR and height R"
                     failureMessage="— look again at the stacked rectangles"
-                    hint="Notice how the widest strip is at the bottom and they get narrower as they stack upward"
+                    hint="Notice how the widest strip is at the bottom and they get narrower as they go up"
                 >
                     <InlineClozeChoice
                         varName="unwrapping_shapeAnswer"

@@ -1,15 +1,16 @@
 {
   "sectionId": "triangle-emerges",
   "learningObjective": "Realize that stacked ring-rectangles form a triangle with base 2πR and height R, whose area equals πR² — the circle area formula",
-  "ahaMoment": "The moment the sweep completes and the student sees that the stacked bars form a perfect triangle with base 2πR and height R — and that the triangle area formula gives exactly πR², revealing where the circle area formula comes from",
+  "ahaMoment": "The sweep completes and the student sees the stacked bars form a triangle with base 2πR and height R, and the triangle area formula gives exactly πR²",
   "miniSpec": {
-    "title": "Adding Ring Areas with Accumulator",
-    "manipulated_variable": "A slider or draggable handle that controls how far through the radius the sweep has progressed (from 0 to R), adding ring areas one by one",
-    "primary_visual_feedback": "As the student drags the slider outward, horizontal bars appear and stack upward, each bar's width proportional to 2πr for that ring's radius. The bars form a triangle shape. A running area counter displays the accumulated sum, approaching πR² as the sweep completes. The formula 2πr × dr is shown above the currently-adding ring.",
-    "goal_structure": "Guided sweep from 0 to full radius R, with the payoff being the completed triangle and the area equaling πR²",
-    "causal_chain_exposed": "Current sweep position r, the ring being added with its area formula 2πr × dr displayed, the running total of accumulated area, the triangle dimensions labeled (base = 2πR when complete, height = R), and the final area calculation ½ × 2πR × R = πR²",
-    "trace_strategy": "All added bars remain visible, building up the triangle progressively; this accumulation IS the concept",
-    "aha_moment": "The moment the sweep completes and the student sees that the stacked bars form a perfect triangle with base 2πR and height R — and that the triangle area formula gives exactly πR², revealing where the circle area formula comes from"
+    "title": "Adding Ring Areas",
+    "manipulated_variable": "Draggable slider controlling sweep position outward through the radii",
+    "primary_visual_feedback": "Horizontal bars appear stacking upward, widening with r; currently added ring highlighted; formula 2πr×dr displayed above ring; running total counter showing accumulated area",
+    "goal_structure": "Guided sweep from 0 to full radius R, with the payoff being the completed triangle and area equaling πR²",
+    "causal_chain_exposed": "Current sweep position, the ring being added with formula 2πr×dr, running total of accumulated area, triangle dimensions (base 2πR, height R), final area ½ × 2πR × R = πR²",
+    "trace_strategy": "All added bars remain visible, building up the triangle progressively — this accumulation IS the concept",
+    "aha_moment": "The sweep completes and the student sees the stacked bars form a triangle with base 2πR and height R, and the triangle area formula gives exactly πR²",
+    "live_url": "/api/scene-live/42a276121d8278ad150d5753.html"
   },
   "modelVariables": {
     "R": "The circle radius (frozen, carried over from previous section)",
@@ -30,8 +31,18 @@
       "visualCheck": "Triangle is partially formed with bars stacked, not yet complete"
     },
     {
+      "id": "slider-controls-sweep",
+      "description": "The slider control exists and can be operated to change sweep position",
+      "setup": { "sweepR": 1 },
+      "action": { "var": "sweepR", "to": 2.5 },
+      "expect": [
+        { "var": "sweepR", "op": "approx", "value": 2.5, "tolerance": 0.1 }
+      ],
+      "visualCheck": "Dragging the slider changes the sweep position"
+    },
+    {
       "id": "bars-accumulate-as-sweep-increases",
-      "description": "As sweep increases, more bars appear and accumulated area grows",
+      "description": "As sweep increases, bars stack upward forming a triangle and area counter increases",
       "setup": { "sweepR": 1 },
       "action": { "var": "sweepR", "to": 3 },
       "expect": [
@@ -51,14 +62,14 @@
     },
     {
       "id": "frozen-parameters-stay-fixed",
-      "description": "R and numRings are frozen and do not change during interaction",
+      "description": "R and numRings are frozen/carried over and do not change during interaction",
       "setup": { "sweepR": 2 },
       "action": { "var": "sweepR", "to": 3.5 },
       "expect": [
         { "var": "R", "op": "==", "value": 4 },
         { "var": "numRings", "op": "==", "value": 5 }
       ],
-      "visualCheck": "The circle radius R and number of rings remain constant"
+      "visualCheck": "The circle radius R and number of rings remain constant and appear locked"
     }
   ],
   "invariants": [
