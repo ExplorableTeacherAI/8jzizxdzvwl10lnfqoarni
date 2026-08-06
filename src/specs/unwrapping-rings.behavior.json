@@ -1,0 +1,86 @@
+{
+  "sectionId": "unwrapping-rings",
+  "learningObjective": "See that when a thin ring is cut and unrolled, it becomes a rectangle with width equal to the circumference (2πr) and height equal to the ring thickness — and that these rectangles stack into a triangular shape",
+  "ahaMoment": "Discovering that as rings get thinner (higher ring count), the stacked rectangles form a cleaner and cleaner triangle shape, with the widest rectangle at the top (outer circumference) and shortest at the bottom (inner rings)",
+  "miniSpec": {
+    "title": "Ring Unwrapping Slider with Side-by-Side Views",
+    "manipulated_variable": "A slider control that changes the number of rings the circle is divided into (from perhaps 3 to 50 rings)",
+    "primary_visual_feedback": "The circle re-divides into more or fewer concentric rings, and simultaneously the stack of rectangles on the right updates to show correspondingly thinner or thicker rectangles, maintaining visual correspondence through color; the stacked rectangles form a stepped approximation to a triangle",
+    "goal_structure": "Free exploration with implicit guidance toward increasing ring count to observe rectangles becoming more uniform in width and the triangle shape becoming cleaner",
+    "causal_chain_exposed": "Each ring displays its radius value r, the corresponding rectangle shows its width labeled as 2πr, and its height labeled as dr; total area of rectangles displayed numerically approaching πr²",
+    "trace_strategy": "None - the current state is sufficient because the concept focuses on the geometric transformation at the current subdivision level",
+    "aha_moment": "Discovering that as rings get thinner (higher ring count), the stacked rectangles form a cleaner and cleaner triangle shape, with the widest rectangle at the top (outer circumference) and shortest at the bottom (inner rings)"
+  },
+  "modelVariables": {
+    "numRings": "Number of rings the circle is divided into (3-50), student-controlled",
+    "R": "Circle radius, carried over from previous section, frozen/locked",
+    "unwrapping_dr": "Derived: thickness of each ring = R / numRings",
+    "unwrapping_totalArea": "Derived: sum of all rectangle areas, approaching πR²",
+    "unwrapping_outerCircumference": "Derived: 2πR, width of the outermost rectangle"
+  },
+  "assertions": [
+    {
+      "id": "initial-state-poses-problem",
+      "description": "On load, the circle is divided into a small number of rings (5), showing visible approximation steps in the triangle",
+      "expect": [
+        { "var": "numRings", "op": "==", "value": 5 }
+      ],
+      "visualCheck": "Circle shows 5 distinct concentric rings; right side shows 5 rectangles in a stepped staircase"
+    },
+    {
+      "id": "slider-control-exists",
+      "description": "The numRings slider can be operated",
+      "setup": { "numRings": 5 },
+      "action": { "var": "numRings", "to": 20 },
+      "expect": [
+        { "var": "numRings", "op": "==", "value": 20 }
+      ],
+      "visualCheck": "Circle now shows 20 thinner rings; rectangles are thinner and more numerous"
+    },
+    {
+      "id": "more-rings-thinner-dr",
+      "description": "Increasing rings makes each ring thinner (dr = R/n)",
+      "setup": { "numRings": 10, "R": 4 },
+      "action": { "var": "numRings", "to": 20 },
+      "expect": [
+        { "var": "unwrapping_dr", "op": "approx", "value": 0.2, "tolerance": 0.01 }
+      ],
+      "visualCheck": "Ring thickness visibly decreases as ring count doubles"
+    },
+    {
+      "id": "total-area-approaches-pi-r-squared",
+      "description": "Total area of rectangles approximates πR² (the aha setup)",
+      "setup": { "numRings": 50, "R": 4 },
+      "action": { "var": "numRings", "to": 50 },
+      "expect": [
+        { "var": "unwrapping_totalArea", "op": "approx", "value": 50.27, "tolerance": 1.0 }
+      ],
+      "visualCheck": "Total area readout shows value close to πR² ≈ 50.27"
+    },
+    {
+      "id": "R-is-frozen",
+      "description": "The circle radius R is carried over and cannot be changed",
+      "setup": { "R": 4 },
+      "expect": [
+        { "var": "R", "op": "==", "value": 4 }
+      ],
+      "visualCheck": "Radius shown as a fixed/locked value, not interactive"
+    }
+  ],
+  "invariants": [
+    {
+      "id": "dr-equals-R-over-n",
+      "description": "Ring thickness always equals R divided by number of rings",
+      "expect": [
+        { "expr": "abs(unwrapping_dr - R / numRings) < 0.001" }
+      ]
+    },
+    {
+      "id": "area-sum-formula",
+      "description": "Total area of rectangles = sum of 2πr_i × dr for all rings",
+      "expect": [
+        { "expr": "unwrapping_totalArea > 0" }
+      ]
+    }
+  ]
+}

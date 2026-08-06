@@ -78,7 +78,174 @@ export interface VariableDefinition {
  */
 export const variableDefinitions: Record<string, VariableDefinition> = {
     // ========================================
-    // ADD YOUR VARIABLES HERE
+    // SLICING-INTO-RINGS SECTION VARIABLES
+    // ========================================
+
+    /** Current radius being explored (the manipulated variable) */
+    rings_currentRadius: {
+        defaultValue: 0.2,
+        type: 'number',
+        label: 'Current Radius',
+        description: 'The current radius position r — drag outward from center to grow rings',
+        unit: '',
+        min: 0,
+        max: 4,
+        step: 0.05,
+        color: '#62D0AD',
+    },
+
+    /** Derived: number of rings shown so far */
+    rings_ringCount: {
+        defaultValue: 0,
+        type: 'number',
+        label: 'Ring Count',
+        description: 'Number of concentric rings shown (derived from currentRadius / dr)',
+    },
+
+    /** Fixed: maximum radius of the full circle */
+    rings_maxRadius: {
+        defaultValue: 4,
+        type: 'number',
+        label: 'Maximum Radius',
+        description: 'The full circle radius R',
+    },
+
+    /** Assessment answer: what fills the circle */
+    rings_answer_fills: {
+        defaultValue: '',
+        type: 'select',
+        label: 'What fills the circle answer',
+        description: 'Student answer for what fills the circle',
+        placeholder: '???',
+        correctAnswer: 'concentric rings',
+        options: ['solid color', 'concentric rings', 'pie slices', 'grid squares'],
+        color: '#62D0AD',
+    },
+
+    // ========================================
+    // TRIANGLE-EMERGES SECTION VARIABLES
+    // ========================================
+    // Note: R and numRings are carried over from UNWRAPPING-RINGS section
+
+    /** Sweep position (student-controlled) - 0 to R */
+    sweepR: {
+        defaultValue: 1.2,
+        type: 'number',
+        label: 'Sweep Position',
+        description: 'Current sweep position from 0 to R, controlling how many rings are shown',
+        unit: '',
+        min: 0,
+        max: 4,
+        step: 0.1,
+        color: '#62D0AD', // soft teal — the ONE accent
+    },
+
+    /** Derived: accumulated area (written by figure) */
+    triangleEmerges_accumulatedArea: {
+        defaultValue: 0,
+        type: 'number',
+        label: 'Accumulated Area',
+        description: 'Sum of ring areas up to current sweep position',
+        color: '#62D0AD',
+    },
+
+    /** Derived: current ring area */
+    triangleEmerges_currentRingArea: {
+        defaultValue: 0,
+        type: 'number',
+        label: 'Current Ring Area',
+        description: 'Area of the ring at the current sweep position (2πr × dr)',
+        color: '#62D0AD',
+    },
+
+    /** Derived: final triangle area (πR²) */
+    triangleEmerges_triangleArea: {
+        defaultValue: 78.54,
+        type: 'number',
+        label: 'Triangle Area',
+        description: 'The area of the triangle: ½ × 2πR × R = πR²',
+        color: '#62D0AD',
+    },
+
+    /** Assessment answer for the formula source */
+    triangleEmerges_formulaAnswer: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Formula Answer',
+        description: 'Student answer for where the formula comes from',
+        placeholder: '???',
+        correctAnswer: 'triangle',
+        color: '#62D0AD',
+    },
+
+    // ========================================
+    // UNWRAPPING-RINGS SECTION VARIABLES
+    // ========================================
+
+    /** Number of rings to divide the circle into (the manipulated variable) */
+    numRings: {
+        defaultValue: 5,
+        type: 'number',
+        label: 'Number of Rings',
+        description: 'How many concentric rings the circle is divided into',
+        unit: '',
+        min: 3,
+        max: 50,
+        step: 1,
+        color: '#62D0AD',
+    },
+
+    /** Circle radius R — carried over from section 1, frozen */
+    R: {
+        defaultValue: 4,
+        type: 'number',
+        label: 'Radius',
+        description: 'The radius of the circle (carried over, frozen)',
+        unit: '',
+        min: 1,
+        max: 6,
+        step: 0.5,
+        color: '#64748B', // ink color to indicate frozen
+    },
+
+    /** Derived: ring thickness = R / numRings */
+    unwrapping_dr: {
+        defaultValue: 0.8,
+        type: 'number',
+        label: 'Ring Thickness (dr)',
+        description: 'Derived: thickness of each ring = R / numRings',
+    },
+
+    /** Derived: total area of all rectangles */
+    unwrapping_totalArea: {
+        defaultValue: 0,
+        type: 'number',
+        label: 'Total Area',
+        description: 'Derived: sum of all rectangle areas, approaching πR²',
+    },
+
+    /** Derived: outer circumference = 2πR */
+    unwrapping_outerCircumference: {
+        defaultValue: 0,
+        type: 'number',
+        label: 'Outer Circumference',
+        description: 'Derived: 2πR, width of the outermost rectangle',
+    },
+
+    /** Assessment: what shape do the rectangles form */
+    unwrapping_shapeAnswer: {
+        defaultValue: '',
+        type: 'select',
+        label: 'Shape Answer',
+        description: 'Student answer for what shape the rectangles form',
+        placeholder: '???',
+        correctAnswer: 'triangle',
+        options: ['circle', 'square', 'triangle', 'rectangle'],
+        color: '#8E90F5',
+    },
+
+    // ========================================
+    // EXAMPLE VARIABLES (commented out)
     // ========================================
 
     // Uncomment and modify these examples for your lesson:

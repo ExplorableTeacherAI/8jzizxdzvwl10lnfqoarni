@@ -1,0 +1,82 @@
+{
+  "sectionId": "triangle-emerges",
+  "learningObjective": "Realize that stacked ring-rectangles form a triangle with base 2πR and height R, whose area equals πR² — the circle area formula",
+  "ahaMoment": "The moment the sweep completes and the student sees that the stacked bars form a perfect triangle with base 2πR and height R — and that the triangle area formula gives exactly πR², revealing where the circle area formula comes from",
+  "miniSpec": {
+    "title": "Adding Ring Areas with Accumulator",
+    "manipulated_variable": "A slider or draggable handle that controls how far through the radius the sweep has progressed (from 0 to R), adding ring areas one by one",
+    "primary_visual_feedback": "As the student drags the slider outward, horizontal bars appear and stack upward, each bar's width proportional to 2πr for that ring's radius. The bars form a triangle shape. A running area counter displays the accumulated sum, approaching πR² as the sweep completes. The formula 2πr × dr is shown above the currently-adding ring.",
+    "goal_structure": "Guided sweep from 0 to full radius R, with the payoff being the completed triangle and the area equaling πR²",
+    "causal_chain_exposed": "Current sweep position r, the ring being added with its area formula 2πr × dr displayed, the running total of accumulated area, the triangle dimensions labeled (base = 2πR when complete, height = R), and the final area calculation ½ × 2πR × R = πR²",
+    "trace_strategy": "All added bars remain visible, building up the triangle progressively; this accumulation IS the concept",
+    "aha_moment": "The moment the sweep completes and the student sees that the stacked bars form a perfect triangle with base 2πR and height R — and that the triangle area formula gives exactly πR², revealing where the circle area formula comes from"
+  },
+  "modelVariables": {
+    "R": "The circle radius (frozen, carried over from previous section)",
+    "numRings": "Number of concentric rings (frozen, carried over from previous section)",
+    "sweepR": "Current sweep position (0 to R), student-dragged",
+    "triangleEmerges_accumulatedArea": "derived: sum of ring areas up to sweepR",
+    "triangleEmerges_currentRingArea": "derived: area of the ring at current sweepR (2πr × dr)",
+    "triangleEmerges_triangleArea": "derived: ½ × 2πR × R = πR² (the final formula result)"
+  },
+  "assertions": [
+    {
+      "id": "initial-state-poses-problem",
+      "description": "On load, the sweep starts at a low value so the triangle is incomplete, inviting the student to drag further",
+      "expect": [
+        { "var": "sweepR", "op": "<", "value": 4 },
+        { "var": "triangleEmerges_accumulatedArea", "op": "<", "value": 50.27 }
+      ],
+      "visualCheck": "Triangle is partially formed with bars stacked, not yet complete"
+    },
+    {
+      "id": "bars-accumulate-as-sweep-increases",
+      "description": "As sweep increases, more bars appear and accumulated area grows",
+      "setup": { "sweepR": 1 },
+      "action": { "var": "sweepR", "to": 3 },
+      "expect": [
+        { "var": "triangleEmerges_accumulatedArea", "op": ">", "value": 15 }
+      ],
+      "visualCheck": "More horizontal bars visible, triangle shape emerging, area counter increased"
+    },
+    {
+      "id": "full-sweep-completes-triangle",
+      "description": "At full radius, the triangle is complete and area equals πR²",
+      "setup": { "sweepR": 1 },
+      "action": { "var": "sweepR", "to": 4 },
+      "expect": [
+        { "var": "triangleEmerges_accumulatedArea", "op": "approx", "value": 50.27, "tolerance": 1 }
+      ],
+      "visualCheck": "Complete triangle visible with base 2πR and height R labeled, area shows πR² ≈ 50.27"
+    },
+    {
+      "id": "frozen-parameters-stay-fixed",
+      "description": "R and numRings are frozen and do not change during interaction",
+      "setup": { "sweepR": 2 },
+      "action": { "var": "sweepR", "to": 3.5 },
+      "expect": [
+        { "var": "R", "op": "==", "value": 4 },
+        { "var": "numRings", "op": "==", "value": 5 }
+      ],
+      "visualCheck": "The circle radius R and number of rings remain constant"
+    }
+  ],
+  "invariants": [
+    {
+      "id": "accumulated-area-bounded",
+      "description": "Accumulated area is always between 0 and πR²",
+      "expect": [
+        { "expr": "triangleEmerges_accumulatedArea >= 0" },
+        { "expr": "triangleEmerges_accumulatedArea <= 3.14159 * R * R + 1" }
+      ]
+    },
+    {
+      "id": "sweep-within-bounds",
+      "description": "Sweep position stays within 0 to R",
+      "expect": [
+        { "expr": "sweepR >= 0" },
+        { "expr": "sweepR <= R" }
+      ]
+    }
+  ]
+}

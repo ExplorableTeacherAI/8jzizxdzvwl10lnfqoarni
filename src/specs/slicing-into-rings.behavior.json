@@ -1,0 +1,60 @@
+{
+  "sectionId": "slicing-into-rings",
+  "learningObjective": "Understand that a circle can be decomposed into many thin concentric rings stacked from center outward — the circle isn't a solid blob but layers from the center out",
+  "ahaMoment": "The circle isn't a solid blob but rather dozens or hundreds of thin rings stacked together, each contributing a small amount to the total area",
+  "miniSpec": {
+    "title": "Drag Radius to Grow Concentric Rings",
+    "manipulated_variable": "Dragging the endpoint of a radius line outward from the center, which changes the current radius value r",
+    "primary_visual_feedback": "Concentric rings appear sequentially inside the swept area, with each new ring appearing at the current radius position as the handle moves outward",
+    "goal_structure": "Free exploration with optional encouragement to drag fully from center to edge to see the complete decomposition",
+    "causal_chain_exposed": "The current radius value r displayed numerically, the number of rings shown so far, and optionally the thickness of each ring (dr) labeled on one ring",
+    "trace_strategy": "All previously-drawn rings remain visible and accumulate, creating a full disk; no erasure occurs because the concept requires seeing the complete buildup of layers",
+    "aha_moment": "The circle isn't a solid blob but rather dozens or hundreds of thin rings stacked together, each contributing a small amount to the total area"
+  },
+  "modelVariables": {
+    "rings_currentRadius": "current radius position r (0 to R_max), student-dragged outward from center",
+    "rings_ringCount": "derived: number of rings that have been painted so far, based on currentRadius / dr",
+    "rings_maxRadius": "the full circle's radius R (fixed), shown as the outer boundary"
+  },
+  "assertions": [
+    {
+      "id": "initial-state-poses-problem",
+      "description": "On load, the circle is empty (no rings yet) — the handle sits near the center, inviting the student to drag outward",
+      "expect": [
+        { "var": "rings_currentRadius", "op": "<=", "value": 0.3 },
+        { "var": "rings_ringCount", "op": "<=", "value": 1 }
+      ],
+      "visualCheck": "Circle outline visible but interior mostly empty; handle visible at center"
+    },
+    {
+      "id": "rings-accumulate-as-radius-grows",
+      "description": "Dragging the radius outward causes rings to appear and accumulate",
+      "setup": { "rings_currentRadius": 0.2 },
+      "action": { "var": "rings_currentRadius", "to": 2.5 },
+      "expect": [
+        { "var": "rings_ringCount", "op": ">=", "value": 8 }
+      ],
+      "visualCheck": "Multiple concentric rings fill the circle from center to the dragged position"
+    },
+    {
+      "id": "full-radius-fills-circle",
+      "description": "Dragging to the maximum radius fills the entire circle with rings",
+      "setup": { "rings_currentRadius": 0.2 },
+      "action": { "var": "rings_currentRadius", "to": 4.0 },
+      "expect": [
+        { "var": "rings_ringCount", "op": ">=", "value": 12 }
+      ],
+      "visualCheck": "Circle is completely filled with concentric rings from center to edge"
+    }
+  ],
+  "invariants": [
+    {
+      "id": "ring-count-matches-radius",
+      "description": "The number of rings shown is proportional to the current radius",
+      "expect": [
+        { "expr": "rings_ringCount >= 0" },
+        { "expr": "rings_ringCount <= 20" }
+      ]
+    }
+  ]
+}
