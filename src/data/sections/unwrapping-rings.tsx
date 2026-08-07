@@ -2,16 +2,20 @@
  * Unwrapping Rings Section
  * ========================
  *
- * Second section: visualizing how concentric rings become rectangles
- * when cut and unrolled, and how these rectangles stack into a triangle.
+ * Second section: visualizing the direct correspondence between rings in the
+ * circle and strips in the triangle. Ported faithfully from the approved live
+ * scene — split-screen with circle on left and triangle on right; when a ring
+ * is highlighted, the corresponding strip highlights simultaneously.
  *
- * Ported from approved live scene: Shows three views side by side:
- * 1. Circle divided into colored rings (left)
- * 2. Horizontal strips stacked — the unrolled rectangles (middle)
- * 3. Stepped triangle — showing the triangle approximation (right)
+ * Learning objective: See the direct connection between a ring in the circle
+ * and its corresponding strip in the triangle — each ring becomes a horizontal
+ * strip with width equal to its circumference.
+ *
+ * Proposition: A thin ring, when cut and unrolled, becomes a rectangle with
+ * width 2πr (the circumference) and height dr (the thickness).
  */
 
-import { type ReactElement, useEffect } from "react";
+import { type ReactElement, useEffect, useState, useRef, useCallback } from "react";
 import { StackLayout } from "@/components/layouts";
 import { Block } from "@/components/templates";
 import {
@@ -30,217 +34,262 @@ import {
 } from "../variables";
 import {
     circumference,
-    circleArea,
     ringThicknessForN,
-    totalUnwrappedArea,
-    generateUnwrappingRings,
+    ringMidRadius,
+    ringOuterRadius,
 } from "../model";
 
 // ── View constants ───────────────────────────────────────────────────────────
 
-const VIEW_WIDTH = 440;
-const VIEW_HEIGHT = 240;
+const VIEW_WIDTH = 500;
+const VIEW_HEIGHT = 280;
+const PADDING = 24;
 
-// Circle group position
-const CIRCLE_CENTER_X = 70;
-const CIRCLE_CENTER_Y = 120;
-const CIRCLE_RADIUS_PX = 55;
+// Circle panel (left side)
+const CIRCLE_CX = 115;
+const CIRCLE_CY = 140;
+const CIRCLE_RADIUS_PX = 70;
 
-// Strips group position (horizontal rectangles showing unrolled widths)
-const STRIPS_CENTER_X = 190;
-const STRIPS_CENTER_Y = 120;
-const STRIPS_MAX_WIDTH = 80; // Max strip width for outermost circumference
+// Triangle panel (right side)
+const TRI_CENTER_X = 370;
+const TRI_BOTTOM_Y = 245;
+const TRI_MAX_BASE = 160;
+const TRI_MAX_HEIGHT = 180;
 
-// Triangle group position (stepped approximation)
-const TRIANGLE_CENTER_X = 340;
-const TRIANGLE_CENTER_Y = 120;
-const TRIANGLE_BASE_WIDTH = 80;
-
-// Colors
+// Colors (from design language)
 const INK = "#334155";
 const INK_STRUCTURE = "#64748B";
-const ACCENT = "#62D0AD"; // Soft Teal — the ONE accent
+const INK_QUIET = "#94A3B8";
+const ACCENT = "#62D0AD"; // Soft teal — ONE accent
+const ACCENT_HIGHLIGHT = "rgba(98, 208, 173, 0.9)";
 
 // ── Helper: generate color gradient for rings ────────────────────────────────
 
 const ringColor = (index: number, total: number): string => {
     // Quiet teal gradient — fills whisper, strokes carry identity
-    const hue = 165; // Consistent teal hue
-    const saturation = 35; // Muted
-    const lightness = 78 - (index / Math.max(1, total - 1)) * 20; // 78% (lightest/inner) to 58% (darkest/outer)
+    const hue = 200 + (index / Math.max(1, total)) * 60; // 200 → 260
+    const saturation = 40 + (index / Math.max(1, total)) * 20; // 40 → 60
+    const lightness = 70 - (index / Math.max(1, total)) * 25; // 70 → 45
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 };
 
 // ── The bespoke drawing ──────────────────────────────────────────────────────
 
-function UnwrappingRingsDrawing() {
+function RingCorrespondenceDrawing() {
     const setVar = useSetVar();
     const numRings = useVar<number>("numRings", 5);
     const R = useVar<number>("R", 4);
+    const [hoveredRing, setHoveredRing] = useState<number | null>(null);
+    const svgRef = useRef<SVGSVGElement>(null);
 
-    // Compute derived values and write to store for verification
+    // Derive values
     const dr = ringThicknessForN(R, numRings);
-    const totalArea = totalUnwrappedArea(R, numRings);
-    const outerCirc = circumference(R);
-    const exactArea = circleArea(R);
-    const rings = generateUnwrappingRings(R, numRings);
-    const errorPercent = Math.abs(exactArea - totalArea) / exactArea * 100;
+    const pxPerUnit = CIRCLE_RADIUS_PX / R;
 
+    // Highlighted ring: hovered if any, else middle ring
+    const highlightIndex = hoveredRing !== null
+        ? hoveredRing
+        : Math.floor((numRings - 1) / 2);
+
+    const highlightedMidR = ringMidRadius(R, numRings, highlightIndex);
+    const highlightedCirc = circumference(highlightedMidR);
+
+    // Write derived values to store
     useEffect(() => {
         setVar("unwrapping_dr", dr);
-        setVar("unwrapping_totalArea", totalArea);
-        setVar("unwrapping_outerCircumference", outerCirc);
-        setVar("unwrapping_errorPercent", errorPercent);
-    }, [dr, totalArea, outerCirc, errorPercent, setVar]);
+        setVar("unwrapping_highlightedRing", highlightIndex);
+        setVar("unwrapping_highlightedCircumference", highlightedCirc);
+    }, [setVar, dr, highlightIndex, highlightedCirc]);
 
-    // Scale factors for visualization
-    const pxPerUnit = CIRCLE_RADIUS_PX / R;
-    const totalHeight = R;
-    const stripHeightScale = (CIRCLE_RADIUS_PX * 2) / totalHeight; // Map R to visual height
+    // Triangle scale calculation
+    const maxCirc = circumference(R); // 2πR — the maximum strip width
+    const triScale = Math.min(TRI_MAX_BASE / maxCirc, TRI_MAX_HEIGHT / R);
+    const scaledBase = maxCirc * triScale;
+    const scaledHeight = R * triScale;
+    const triLeft = TRI_CENTER_X - scaledBase / 2;
+    const triTop = TRI_BOTTOM_Y - scaledHeight;
 
-    // Highlight the middle ring to show dr
-    const highlightRingIndex = Math.floor(numRings / 2);
-    const showDrHighlight = numRings <= 12;
+    // Handle hover events on rings
+    const handleRingEnter = useCallback((index: number) => {
+        setHoveredRing(index);
+    }, []);
+
+    const handleRingLeave = useCallback(() => {
+        setHoveredRing(null);
+    }, []);
 
     return (
-        <div>
-            {/* Readouts above the drawing surface */}
-            <div
-                className="flex justify-between px-4 pb-2 text-xs"
-                style={{ fontVariantNumeric: "tabular-nums", color: INK }}
+        <svg
+            ref={svgRef}
+            viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
+            className="block w-full"
+            role="img"
+            aria-label={`Circle with ${numRings} rings on left, triangle of stacked strips on right, with corresponding ring and strip highlighted`}
+        >
+            {/* Frozen parameter indicator */}
+            <text
+                x={VIEW_WIDTH - PADDING}
+                y={18}
+                fill={INK_QUIET}
+                fontSize="11"
+                textAnchor="end"
+                style={{ fontVariantNumeric: "tabular-nums" }}
             >
-                <span>
-                    Rings: <span className="font-semibold">{numRings}</span>
-                </span>
-                <span style={{ color: INK_STRUCTURE }}>
-                    Error: ~{errorPercent.toFixed(1)}%
-                </span>
-            </div>
-            <svg
-                viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
-                className="block w-full"
-                role="img"
-                aria-label={`Circle divided into ${numRings} rings, unrolled strips, and stepped triangle approximation`}
-            >
-            {/* ─── Left: Circle with concentric rings ─── */}
+                R = {R} (from previous section)
+            </text>
+
+            {/* ─── LEFT PANEL: Circle with concentric rings ─── */}
             <g data-concept="numRings">
                 {/* Draw rings from outside in so inner rings appear on top */}
-                {[...rings].reverse().map((ring, reverseI) => {
-                    const i = numRings - 1 - reverseI;
-                    const rOuter = ring.outerRadius * pxPerUnit;
+                {Array.from({ length: numRings }, (_, i) => numRings - 1 - i).map((i) => {
+                    const rOuter = ringOuterRadius(R, numRings, i) * pxPerUnit;
 
                     return (
                         <circle
                             key={`ring-${i}`}
-                            cx={CIRCLE_CENTER_X}
-                            cy={CIRCLE_CENTER_Y}
+                            cx={CIRCLE_CX}
+                            cy={CIRCLE_CY}
                             r={rOuter}
                             fill={ringColor(i, numRings)}
                             stroke="#fff"
                             strokeWidth="0.5"
+                            style={{ cursor: "pointer" }}
+                            onPointerEnter={() => handleRingEnter(i)}
+                            onPointerLeave={handleRingLeave}
                         />
                     );
                 })}
 
-                {/* Highlight one ring to show dr when few rings */}
-                {showDrHighlight && numRings > 0 && (
-                    <>
-                        {/* Arc showing thickness dr on the highlighted ring — accent at heavier stroke */}
-                        <circle
-                            cx={CIRCLE_CENTER_X}
-                            cy={CIRCLE_CENTER_Y}
-                            r={rings[highlightRingIndex]?.midRadius * pxPerUnit || 0}
-                            fill="none"
-                            stroke={ACCENT}
-                            strokeWidth={Math.max(3, dr * pxPerUnit * 0.85)}
-                            strokeDasharray={`${Math.PI * (rings[highlightRingIndex]?.midRadius || 0) * pxPerUnit * 0.35} 1000`}
-                            strokeLinecap="round"
-                        />
-                        {/* dr label — ink color for readability, positioned clearly */}
-                        <text
-                            x={CIRCLE_CENTER_X + (rings[highlightRingIndex]?.outerRadius || 0) * pxPerUnit + 8}
-                            y={CIRCLE_CENTER_Y + 4}
-                            fill={INK}
-                            fontSize="12"
-                            fontWeight="500"
-                            fontStyle="italic"
-                        >
-                            dr
-                        </text>
-                    </>
-                )}
-            </g>
-
-            {/* ─── Middle: Horizontal strips (unrolled rectangles) ─── */}
-            <g data-concept="unwrapping_totalArea">
-                {rings.map((ring, i) => {
-                    // Width proportional to circumference at this radius
-                    const stripWidth = (ring.circumference / outerCirc) * STRIPS_MAX_WIDTH;
-                    const rectHeight = Math.max((dr * stripHeightScale) - 0.5, 0.5);
-                    const y = STRIPS_CENTER_Y - (totalHeight * stripHeightScale) / 2 + i * dr * stripHeightScale;
-                    const x = STRIPS_CENTER_X - STRIPS_MAX_WIDTH / 2;
-
-                    return (
-                        <rect
-                            key={`strip-${i}`}
-                            x={x}
-                            y={y}
-                            width={stripWidth}
-                            height={rectHeight}
-                            fill={ringColor(i, numRings)}
-                            stroke="#fff"
-                            strokeWidth="0.3"
-                        />
-                    );
-                })}
-            </g>
-
-            {/* ─── Right: Stepped triangle approximation ─── */}
-            <g>
-                {rings.map((ring, i) => {
-                    // Width proportional to radius fraction (r/R)
-                    const frac = ring.midRadius / R;
-                    const stepWidth = frac * TRIANGLE_BASE_WIDTH;
-                    const rectHeight = Math.max((dr * stripHeightScale) - 0.5, 0.5);
-                    const y = TRIANGLE_CENTER_Y - (totalHeight * stripHeightScale) / 2 + i * dr * stripHeightScale;
-                    const x = TRIANGLE_CENTER_X - TRIANGLE_BASE_WIDTH / 2;
-
-                    return (
-                        <rect
-                            key={`tri-step-${i}`}
-                            x={x}
-                            y={y}
-                            width={stepWidth}
-                            height={rectHeight}
-                            fill={ringColor(i, numRings)}
-                            stroke="#fff"
-                            strokeWidth="0.3"
-                        />
-                    );
-                })}
-
-                {/* Dashed triangle outline showing the ideal shape */}
-                <path
-                    d={`M ${TRIANGLE_CENTER_X - TRIANGLE_BASE_WIDTH / 2} ${TRIANGLE_CENTER_Y - (totalHeight * stripHeightScale) / 2}
-                        L ${TRIANGLE_CENTER_X + TRIANGLE_BASE_WIDTH / 2} ${TRIANGLE_CENTER_Y + (totalHeight * stripHeightScale) / 2}
-                        L ${TRIANGLE_CENTER_X - TRIANGLE_BASE_WIDTH / 2} ${TRIANGLE_CENTER_Y + (totalHeight * stripHeightScale) / 2}
-                        Z`}
+                {/* Highlight ring — accent stroke on the selected ring */}
+                <circle
+                    cx={CIRCLE_CX}
+                    cy={CIRCLE_CY}
+                    r={ringMidRadius(R, numRings, highlightIndex) * pxPerUnit}
                     fill="none"
-                    stroke={INK_STRUCTURE}
-                    strokeWidth="0.5"
-                    strokeDasharray="2,2"
-                    strokeLinejoin="round"
+                    stroke={ACCENT}
+                    strokeWidth="3"
+                    data-concept="unwrapping_highlightedRing"
                 />
             </g>
 
+            {/* Circle label */}
+            <text
+                x={CIRCLE_CX}
+                y={CIRCLE_CY + CIRCLE_RADIUS_PX + 20}
+                fill={INK}
+                fontSize="11"
+                textAnchor="middle"
+            >
+                r = {highlightedMidR.toFixed(1)}
+            </text>
+
+            {/* ─── RIGHT PANEL: Triangle of stacked strips ─── */}
+            <g data-concept="unwrapping_highlightedCircumference">
+                {/* Draw strips as trapezoids stacking to form triangle */}
+                {Array.from({ length: numRings }, (_, i) => {
+                    const rOuter = ringOuterRadius(R, numRings, i);
+                    const rInner = i === 0 ? 0 : ringOuterRadius(R, numRings, i - 1);
+                    const circOuter = circumference(rOuter);
+                    const circInner = circumference(rInner);
+
+                    const yBottom = TRI_BOTTOM_Y - rInner * triScale;
+                    const yTop = TRI_BOTTOM_Y - rOuter * triScale;
+                    const wBottom = circInner * triScale;
+                    const wTop = circOuter * triScale;
+                    const xBottomL = TRI_CENTER_X - wBottom / 2;
+                    const xBottomR = TRI_CENTER_X + wBottom / 2;
+                    const xTopL = TRI_CENTER_X - wTop / 2;
+                    const xTopR = TRI_CENTER_X + wTop / 2;
+
+                    const isHighlighted = i === highlightIndex;
+
+                    // Innermost ring (i=0) is a triangle tip
+                    const pathD = i === 0
+                        ? `M${TRI_CENTER_X},${yBottom} L${xTopL},${yTop} L${xTopR},${yTop} Z`
+                        : `M${xBottomL},${yBottom} L${xTopL},${yTop} L${xTopR},${yTop} L${xBottomR},${yBottom} Z`;
+
+                    return (
+                        <path
+                            key={`strip-${i}`}
+                            d={pathD}
+                            fill={isHighlighted ? ACCENT_HIGHLIGHT : ringColor(i, numRings)}
+                            stroke="#fff"
+                            strokeWidth="0.5"
+                            style={{ cursor: "pointer" }}
+                            onPointerEnter={() => handleRingEnter(i)}
+                            onPointerLeave={handleRingLeave}
+                        />
+                    );
+                })}
+
+                {/* Triangle outline */}
+                <path
+                    d={`M${TRI_CENTER_X},${TRI_BOTTOM_Y} L${triLeft},${triTop} L${triLeft + scaledBase},${triTop} Z`}
+                    fill="none"
+                    stroke={INK_STRUCTURE}
+                    strokeWidth="1.5"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                />
+
+                {/* Dimension labels */}
+                {/* Base label: 2πR */}
+                <text
+                    x={TRI_CENTER_X}
+                    y={triTop - 8}
+                    fill={ACCENT}
+                    fontSize="12"
+                    fontWeight="600"
+                    textAnchor="middle"
+                >
+                    2πR
+                </text>
+
+                {/* Height label: R */}
+                <text
+                    x={triLeft + scaledBase + 12}
+                    y={(triTop + TRI_BOTTOM_Y) / 2}
+                    fill={ACCENT}
+                    fontSize="12"
+                    fontWeight="600"
+                    textAnchor="start"
+                >
+                    R
+                </text>
+            </g>
+
+            {/* Highlighted strip circumference readout */}
+            <text
+                x={TRI_CENTER_X}
+                y={TRI_BOTTOM_Y + 20}
+                fill={INK}
+                fontSize="11"
+                textAnchor="middle"
+                style={{ fontVariantNumeric: "tabular-nums" }}
+            >
+                width = 2πr = {highlightedCirc.toFixed(1)}
+            </text>
+
+            {/* Connection line between highlighted ring and strip (visual link) */}
+            {highlightIndex >= 0 && (
+                <line
+                    x1={CIRCLE_CX + ringMidRadius(R, numRings, highlightIndex) * pxPerUnit}
+                    y1={CIRCLE_CY}
+                    x2={triLeft}
+                    y2={TRI_BOTTOM_Y - ringMidRadius(R, numRings, highlightIndex) * triScale}
+                    stroke={ACCENT}
+                    strokeWidth="1.5"
+                    strokeDasharray="4 3"
+                    opacity="0.6"
+                />
+            )}
         </svg>
-        </div>
     );
 }
 
 // ── Figure shell composition ─────────────────────────────────────────────────
 
-function UnwrappingRingsFigure() {
+function RingCorrespondenceFigure() {
     const setVar = useSetVar();
 
     return (
@@ -250,9 +299,9 @@ function UnwrappingRingsFigure() {
                 onReset={() => {
                     setVar("numRings", 5);
                 }}
-                caption="A circle sliced into rings (left), unrolled as horizontal strips (middle), rearranged to show the emerging triangle (right)."
+                caption="Circle divided into rings (left) and the same rings stacked into a triangle (right). Hover over any ring or strip to see the correspondence."
             >
-                <UnwrappingRingsDrawing />
+                <RingCorrespondenceDrawing />
                 <div className="px-6 pb-5">
                     <FigureSlider
                         varName="numRings"
@@ -262,17 +311,12 @@ function UnwrappingRingsFigure() {
                     />
                 </div>
                 <InteractionHintSequence
-                    hintKey="unwrapping-rings-slider"
+                    hintKey="unwrapping-rings-hover"
                     steps={[
                         {
-                            gesture: "drag-horizontal",
-                            label: "Drag to change the number of rings",
-                            position: { x: "50%", y: "92%" },
-                            dragPath: {
-                                type: "line",
-                                startOffset: { x: -40, y: 0 },
-                                endOffset: { x: 40, y: 0 },
-                            },
+                            gesture: "hover",
+                            label: "Hover over a ring to see its matching strip",
+                            position: { x: "28%", y: "50%" },
                         },
                     ]}
                 />
@@ -287,7 +331,7 @@ export const unwrappingRingsBlocks: ReactElement[] = [
     <StackLayout key="layout-unwrapping-rings-heading" maxWidth="xl">
         <Block id="unwrapping-rings-heading" padding="md">
             <EditableH2 id="h2-unwrapping-rings-heading" blockId="unwrapping-rings-heading">
-                Unwrapping the Rings
+                The Magic Connection
             </EditableH2>
         </Block>
     </StackLayout>,
@@ -295,29 +339,33 @@ export const unwrappingRingsBlocks: ReactElement[] = [
     <StackLayout key="layout-unwrapping-rings-intro" maxWidth="xl">
         <Block id="unwrapping-rings-intro" padding="sm">
             <EditableParagraph id="para-unwrapping-rings-intro" blockId="unwrapping-rings-intro">
-                Now for the key trick. Imagine taking scissors to one of those rings, snipping it open, and laying it flat on the table. What do you get? A thin rectangle.
-            </EditableParagraph>
-        </Block>
-    </StackLayout>,
-
-    <StackLayout key="layout-unwrapping-rings-explanation" maxWidth="xl">
-        <Block id="unwrapping-rings-explanation" padding="sm">
-            <EditableParagraph id="para-unwrapping-rings-explanation" blockId="unwrapping-rings-explanation">
-                The width of that rectangle is the circumference at that radius — 2πr. The height is just the thickness of the ring. Adjust the slider to change how many rings divide the circle. As you add more rings, each one gets thinner, and the stack of rectangles shows a cleaner approximation of something familiar.
+                Now see the magic connection. On the left is your circle, divided into rings.
+                On the right is where those rings end up when unrolled — stacked into a triangle.
             </EditableParagraph>
         </Block>
     </StackLayout>,
 
     <StackLayout key="layout-unwrapping-rings-figure" maxWidth="xl">
         <Block id="unwrapping-rings-figure" padding="sm" hasVisualization>
-            <UnwrappingRingsFigure />
+            <RingCorrespondenceFigure />
         </Block>
     </StackLayout>,
 
-    <StackLayout key="layout-unwrapping-rings-observation" maxWidth="xl">
-        <Block id="unwrapping-rings-observation" padding="sm">
-            <EditableParagraph id="para-unwrapping-rings-observation" blockId="unwrapping-rings-observation">
-                Do you see it forming? The rectangles are arranging themselves into a shape you already know.
+    <StackLayout key="layout-unwrapping-rings-guidance" maxWidth="xl">
+        <Block id="unwrapping-rings-guidance" padding="sm">
+            <EditableParagraph id="para-unwrapping-rings-guidance" blockId="unwrapping-rings-guidance">
+                Watch what happens when you highlight a ring. The corresponding strip in the
+                triangle lights up at the same moment. Each ring becomes a horizontal strip —
+                its width is the circumference at that radius, 2πr.
+            </EditableParagraph>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-unwrapping-rings-conclusion" maxWidth="xl">
+        <Block id="unwrapping-rings-conclusion" padding="sm">
+            <EditableParagraph id="para-unwrapping-rings-conclusion" blockId="unwrapping-rings-conclusion">
+                The connection between circle and triangle is direct and visible. Every ring
+                has its place in the triangle.
             </EditableParagraph>
         </Block>
     </StackLayout>,
@@ -325,14 +373,14 @@ export const unwrappingRingsBlocks: ReactElement[] = [
     <StackLayout key="layout-unwrapping-rings-question" maxWidth="xl">
         <Block id="unwrapping-rings-question" padding="sm">
             <EditableParagraph id="para-unwrapping-rings-question" blockId="unwrapping-rings-question">
-                What shape do the stacked rectangles form? A{" "}
+                What shape do the stacked strips form? A{" "}
                 <InlineFeedback
                     varName="unwrapping_shapeAnswer"
                     correctValue="triangle"
                     position="terminal"
                     successMessage="— exactly! A triangle with base 2πR and height R"
-                    failureMessage="— look again at the stacked rectangles"
-                    hint="Notice how the widest strip is at the bottom and they get narrower as they go up"
+                    failureMessage="— look again at the stacked strips on the right"
+                    hint="Notice how the widest strip is at the top and they get narrower as they go down"
                 >
                     <InlineClozeChoice
                         varName="unwrapping_shapeAnswer"
