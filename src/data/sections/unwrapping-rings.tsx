@@ -339,8 +339,8 @@ export const unwrappingRingsBlocks: ReactElement[] = [
     <StackLayout key="layout-unwrapping-rings-intro" maxWidth="xl">
         <Block id="unwrapping-rings-intro" padding="sm">
             <EditableParagraph id="para-unwrapping-rings-intro" blockId="unwrapping-rings-intro">
-                Now see the magic connection. On the left is your circle, divided into rings.
-                On the right is where those rings end up when unrolled — stacked into a triangle.
+                You've seen rings filling the circle. Now watch what happens when we unroll them.
+                On the left, the same circle divided into rings. On the right, each ring laid out flat as a strip, stacking into a triangle.
             </EditableParagraph>
         </Block>
     </StackLayout>,
@@ -354,9 +354,9 @@ export const unwrappingRingsBlocks: ReactElement[] = [
     <StackLayout key="layout-unwrapping-rings-guidance" maxWidth="xl">
         <Block id="unwrapping-rings-guidance" padding="sm">
             <EditableParagraph id="para-unwrapping-rings-guidance" blockId="unwrapping-rings-guidance">
-                Watch what happens when you highlight a ring. The corresponding strip in the
-                triangle lights up at the same moment. Each ring becomes a horizontal strip —
-                its width is the circumference at that radius, 2πr.
+                Hover over any ring in the circle. The matching strip in the triangle lights up
+                at the same moment — a direct one-to-one correspondence. Each ring's width when
+                unrolled is its circumference, 2πr.
             </EditableParagraph>
         </Block>
     </StackLayout>,

@@ -472,8 +472,8 @@ export const triangleEmergesBlocks: ReactElement[] = [
     <StackLayout key="layout-triangle-emerges-intro" maxWidth="xl">
         <Block id="triangle-emerges-intro" padding="sm">
             <EditableParagraph id="para-triangle-emerges-intro" blockId="triangle-emerges-intro">
-                Here's the aha moment. The stacked rectangles form a triangle. Look at its
-                dimensions: the base is the longest rectangle — the outer circumference, 2πR.
+                Here's the aha moment. Those stacked strips form a triangle. Look at its
+                dimensions: the base is the longest strip — the outer circumference, 2πR.
                 The height is the full radius R.
             </EditableParagraph>
         </Block>
@@ -488,10 +488,9 @@ export const triangleEmergesBlocks: ReactElement[] = [
     <StackLayout key="layout-triangle-emerges-guidance" maxWidth="xl">
         <Block id="triangle-emerges-guidance" padding="sm">
             <EditableParagraph id="para-triangle-emerges-guidance" blockId="triangle-emerges-guidance">
-                Drag the slider to sweep from the center outward. Watch each ring's area
-                (2πr × dr) add to the stack. The bars grow wider as r increases, forming that
-                characteristic triangular profile. The running total shows your accumulated
-                area climbing toward a familiar value.
+                Drag outward from the center again, just like before. This time watch the area
+                accumulate: each ring contributes 2πr × dr. The bars grow wider as r increases,
+                forming that triangular profile. The running total climbs toward a familiar value.
             </EditableParagraph>
         </Block>
     </StackLayout>,
