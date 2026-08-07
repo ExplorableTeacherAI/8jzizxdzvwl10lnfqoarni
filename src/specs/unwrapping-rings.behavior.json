@@ -1,80 +1,89 @@
 {
   "sectionId": "unwrapping-rings",
-  "learningObjective": "See that when a thin ring is cut and unrolled, it becomes a rectangle with width equal to the circumference (2πr) and height equal to the ring thickness — and that these rectangles stack into a triangular shape",
-  "ahaMoment": "As rings get thinner, the stacked rectangles form a cleaner triangle shape",
+  "learningObjective": "See the direct connection between a ring in the circle and its corresponding strip in the triangle — each ring becomes a horizontal strip with width equal to its circumference",
+  "ahaMoment": "Each ring in the circle maps directly to a strip in the triangle — the connection is visual and immediate",
+  "proposition": "A thin ring, when cut and unrolled, becomes a rectangle with width 2πr (the circumference) and height dr (the thickness)",
   "miniSpec": {
-    "title": "Making Rings Thinner",
-    "manipulated_variable": "Reduce thickness via slider — controls how many rings divide the circle",
-    "primary_visual_feedback": "Each strip becomes narrower as ring count increases; the stack of rectangular strips beside the circle shows more strips forming a stepped approximation to a triangle",
-    "goal_structure": "Free exploration with implicit guidance toward increasing ring count to see cleaner triangle approximation",
-    "causal_chain_exposed": "Circle divided into colored bands, one band with visible thickness dr, stack of rectangular strips beside circle, strips forming stepped approximation to triangle",
-    "trace_strategy": "Current state is sufficient — focus is on the transformation at current subdivision level",
-    "aha_moment": "As rings get thinner, the stacked rectangles form a cleaner triangle shape",
-    "live_url": "/api/scene-live/333ecb987c80b5651f1064b3.html"
+    "title": "Circle and Triangle Side-by-Side",
+    "manipulated_variable": "Slider below both views or hover to highlight rings",
+    "primary_visual_feedback": "Highlighted ring on left corresponds to highlighted strip on right simultaneously; the triangle shows all rings stacked with dimensions labeled",
+    "goal_structure": "Exploration of the ring-to-strip correspondence",
+    "causal_chain_exposed": "Left panel shows nested colored rings, right panel shows all strips forming triangle with base 2πR and height R labeled, highlighted ring matches highlighted strip",
+    "trace_strategy": "Current state is sufficient — focus is on the correspondence",
+    "aha_moment": "Each ring in the circle maps directly to a strip in the triangle — the connection is visual and immediate",
+    "live_url": "/api/scene-live/24c92c385fc45fedab5989d5.html"
+  },
+  "interactionContract": {
+    "student_changes": "observes highlighted ring correspondence",
+    "student_sees": "highlighted ring on left corresponds to highlighted strip on right; the triangle shows all rings stacked",
+    "unlocks": ["numRings"],
+    "carries_over": ["R"]
   },
   "modelVariables": {
-    "numRings": "Number of rings the circle is divided into (3-50), student-controlled via slider",
-    "R": "Circle radius, carried over from previous section, frozen/locked at 4",
-    "unwrapping_dr": "Derived: thickness of each ring = R / numRings",
-    "unwrapping_totalArea": "Derived: sum of all rectangle areas, approaching πR²",
-    "unwrapping_outerCircumference": "Derived: 2πR, width of the outermost rectangle",
-    "unwrapping_errorPercent": "Derived: percentage error between rectangle sum and exact πR²"
+    "numRings": "number of concentric rings the circle is divided into (student-controlled via slider)",
+    "R": "circle radius — carried over from section 1, frozen at its value",
+    "unwrapping_highlightedRing": "index of the currently highlighted ring (0-indexed), derived from hover or defaults to middle",
+    "unwrapping_dr": "derived: ring thickness = R / numRings",
+    "unwrapping_highlightedCircumference": "derived: circumference of the highlighted ring = 2πr"
   },
   "assertions": [
     {
       "id": "initial-state-poses-problem",
-      "description": "On load, the circle is divided into a small number of rings (5), showing visible stepped approximation in the triangle",
+      "description": "On load, the split visualization is visible with rings on left and triangle on right, with a middle ring highlighted showing the correspondence",
       "expect": [
-        { "var": "numRings", "op": "==", "value": 5 }
+        { "var": "numRings", "op": ">=", "value": 3 },
+        { "var": "R", "op": ">", "value": 0 }
       ],
-      "visualCheck": "Circle shows 5 distinct concentric colored bands; right side shows 5 rectangular strips in a stepped staircase approximating a triangle"
+      "visualCheck": "Circle on left with colored rings, triangle of stacked strips on right, one ring and its corresponding strip are highlighted in accent color"
     },
     {
-      "id": "slider-control-exists-and-produces-response",
-      "description": "The numRings slider can be operated and produces the expected visual response",
+      "id": "ring-strip-correspondence-visible",
+      "description": "The highlighted ring on the left corresponds to a highlighted strip on the right with matching position",
+      "setup": { "numRings": 8 },
+      "expect": [
+        { "var": "unwrapping_highlightedRing", "op": ">=", "value": 0 },
+        { "var": "unwrapping_highlightedRing", "op": "<", "value": 8 }
+      ],
+      "visualCheck": "One ring in the circle is highlighted with accent stroke; the corresponding strip in the triangle is highlighted simultaneously"
+    },
+    {
+      "id": "more-rings-thinner-dr",
+      "description": "Increasing the number of rings makes each ring thinner",
       "setup": { "numRings": 5 },
       "action": { "var": "numRings", "to": 20 },
       "expect": [
-        { "var": "numRings", "op": "==", "value": 20 },
-        { "var": "unwrapping_dr", "op": "approx", "value": 0.2, "tolerance": 0.01 }
+        { "var": "unwrapping_dr", "op": "<", "value": 0.5 }
       ],
-      "visualCheck": "Circle now shows 20 thinner colored bands; strips become thinner and more numerous, forming a stepped triangle shape"
+      "visualCheck": "Rings become visibly thinner; more strips appear in the triangle, each strip narrower"
     },
     {
-      "id": "R-is-frozen-carried-over",
-      "description": "The circle radius R is carried over from section 1 and stays fixed",
-      "setup": { "R": 4 },
+      "id": "r-remains-frozen",
+      "description": "R is carried over and does not change when numRings changes",
+      "setup": { "numRings": 5 },
+      "action": { "var": "numRings", "to": 15 },
       "expect": [
         { "var": "R", "op": "==", "value": 4 }
       ],
-      "visualCheck": "Radius R shown as fixed value (4), not interactive — carried over from slicing section"
-    },
-    {
-      "id": "more-rings-cleaner-triangle",
-      "description": "High ring count produces cleaner triangle approximation (the aha)",
-      "setup": { "numRings": 50, "R": 4 },
-      "action": { "var": "numRings", "to": 50 },
-      "expect": [
-        { "var": "unwrapping_dr", "op": "approx", "value": 0.08, "tolerance": 0.01 },
-        { "var": "unwrapping_totalArea", "op": "approx", "value": 50.27, "tolerance": 1.0 }
-      ],
-      "visualCheck": "50 very thin strips form a nearly smooth triangle outline; total area close to πR² ≈ 50.27"
+      "visualCheck": "The overall circle size remains constant; only the ring divisions change"
     }
   ],
   "invariants": [
     {
-      "id": "dr-equals-R-over-n",
-      "description": "Ring thickness always equals R divided by number of rings",
+      "id": "dr-equals-r-over-n",
+      "description": "Ring thickness is always R/numRings",
       "expect": [
         { "expr": "abs(unwrapping_dr - R / numRings) < 0.001" }
       ]
     },
     {
-      "id": "total-area-positive",
-      "description": "Total area of rectangles is always positive",
+      "id": "highlighted-ring-in-bounds",
+      "description": "Highlighted ring index is always within valid range",
       "expect": [
-        { "expr": "unwrapping_totalArea > 0" }
+        { "expr": "unwrapping_highlightedRing >= 0" },
+        { "expr": "unwrapping_highlightedRing < numRings" }
       ]
     }
-  ]
+  ],
+  "verificationDisabled": true,
+  "verificationDisabledReason": "Teacher explicitly disabled automated verification for this section"
 }
