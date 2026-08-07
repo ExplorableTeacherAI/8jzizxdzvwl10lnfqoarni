@@ -68,8 +68,12 @@ gradients, soft muted palette only. On top of that:
 - **Whitespace is load-bearing.** ≥ 24px padding inside the drawing surface on all sides;
   labels never touch the frame; nothing is ever clipped (see the safe-viewBox rule in
   `CLAUDE.md`). If a figure feels crowded, the fix is removing elements, not shrinking them.
-- **Scale the canvas to the content.** Drawing surface ≤ ~560px tall; the whole figure with
-  its controls fits one laptop screen (≤ ~780px). Coordinate bounds hug the action (content
+- **Scale the canvas to the content.** The `<Figure>` shell renders at most **660px wide**,
+  centered in the content column (the shell enforces this — a `w-full` SVG never spans the
+  1024px column). Design the viewBox for that width: prefer landscape-to-4:3 aspect
+  (e.g. 560×320, 440×280, 400×300) so the rendered drawing stays ≤ ~560px tall; a square
+  or portrait viewBox renders taller than it is wide and usually reads oversized. The whole
+  figure with its controls fits one laptop screen (≤ ~780px). Coordinate bounds hug the action (content
   extent + ~15% margin) so the ink spans well over half of the canvas in both axes at every
   reachable state. A big canvas with the action huddled in one corner — or a giant dead band
   of nothing — is a hard verification failure, exactly like clipping. If most of the range is

@@ -1,17 +1,17 @@
 {
   "section_id": "narrative-polish",
   "title": "Narrative polish",
-  "status": "ready",
-  "detail": "transitions polished \u2014 the lesson reads as one story",
-  "summary": "Narrative polish across all sections",
+  "status": "building",
+  "detail": "smoothing the story across sections",
+  "summary": "",
   "verify_passed": null,
   "is_revision": false,
-  "registered": true,
+  "registered": false,
   "issues": [],
   "skip_verification": true,
-  "sdk_session_id": "6e3e9fa4-e812-4341-a773-a7cb516cec40",
-  "created_at": 1786038508.381523,
-  "updated_at": 1786038567.2383711,
+  "sdk_session_id": "b1fb2f27-dd6f-4b36-8c38-49e4e10752fd",
+  "created_at": 1786041230.507087,
+  "updated_at": 1786041231.147872,
   "payload": {
     "title": "Narrative polish"
   }
