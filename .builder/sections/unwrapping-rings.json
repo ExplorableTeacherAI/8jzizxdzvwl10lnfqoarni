@@ -1,47 +1,46 @@
 {
   "section_id": "unwrapping-rings",
-  "title": "Making Rings Thinner",
-  "status": "ready",
-  "detail": "live in the preview \u2014 quality checks skipped at your request",
-  "summary": "Making Rings Thinner \u2014 As rings get thinner, the stacked rectangles form a cleaner triangle shape",
+  "title": "Circle and Triangle Side-by-Side",
+  "status": "building",
+  "detail": "writing spec and code",
+  "summary": "",
   "verify_passed": null,
-  "is_revision": true,
-  "registered": true,
+  "is_revision": false,
+  "registered": false,
   "issues": [],
   "skip_verification": true,
-  "sdk_session_id": "6b5e20b4-2082-4618-a246-15683b47c084",
-  "created_at": 1786040794.09274,
-  "updated_at": 1786041228.60163,
+  "sdk_session_id": "1297e142-1929-42ff-8232-e5fc415b5eab",
+  "created_at": 1786074408.390249,
+  "updated_at": 1786074408.919179,
   "payload": {
     "section_id": "unwrapping-rings",
-    "learning_objective": "See that when a thin ring is cut and unrolled, it becomes a rectangle with width equal to the circumference (2\u03c0r) and height equal to the ring thickness",
+    "learning_objective": "See the direct connection between a ring in the circle and its corresponding strip in the triangle \u2014 each ring becomes a horizontal strip with width equal to its circumference",
     "mini_spec": {
-      "title": "Making Rings Thinner",
-      "manipulated_variable": "Slider that controls how many rings divide the circle (reducing thickness)",
-      "primary_visual_feedback": "Each strip becomes narrower as ring count increases; stack of rectangular strips beside circle shows more strips forming stepped approximation to triangle",
-      "goal_structure": "Free exploration with implicit guidance toward increasing ring count",
-      "causal_chain_exposed": "Circle divided into colored bands, one band with visible thickness dr, stack of rectangular strips beside circle, strips forming stepped approximation to triangle",
-      "trace_strategy": "Current state is sufficient",
-      "aha_moment": "As rings get thinner, the stacked rectangles form a cleaner triangle shape",
-      "live_url": "/api/scene-live/333ecb987c80b5651f1064b3.html"
+      "title": "Circle and Triangle Side-by-Side",
+      "manipulated_variable": "Slider below both views or hover to highlight rings",
+      "primary_visual_feedback": "Highlighted ring on left corresponds to highlighted strip on right simultaneously; the triangle shows all rings stacked with dimensions labeled",
+      "goal_structure": "Exploration of the ring-to-strip correspondence",
+      "causal_chain_exposed": "Left panel shows nested colored rings, right panel shows all strips forming triangle with base 2\u03c0R and height R labeled, highlighted ring matches highlighted strip",
+      "trace_strategy": "Current state is sufficient \u2014 focus is on the correspondence",
+      "aha_moment": "Each ring in the circle maps directly to a strip in the triangle \u2014 the connection is visual and immediate",
+      "live_url": "/api/scene-live/24c92c385fc45fedab5989d5.html"
     },
     "target_misconception": "",
     "audience": "University (ages 20+)",
     "learner_profile": "Need foundations and step-by-step support",
-    "section_context": "Second section, building on the rings from section 1. Students now see what happens when rings are cut open and laid flat.",
-    "design_brief": "READ the approved live scene from ../../scene_live/333ecb987c80b5651f1064b3.html and port its mathematics and interaction faithfully. The scene shows a slider that controls ring thickness \u2014 as rings get thinner, strips stack beside the circle forming a stepped triangle. Do NOT redesign \u2014 use the exact interaction from the live file.",
+    "section_context": "Second section, building on the rings from section 1. Students now see the side-by-side connection between circle rings and triangle strips.",
+    "design_brief": "READ the approved live scene from ../../scene_live/24c92c385fc45fedab5989d5.html and port its mathematics and interaction faithfully. The scene shows a split screen with circle on left and triangle on right \u2014 when a ring is highlighted, the corresponding strip highlights simultaneously. Do NOT redesign \u2014 use the exact interaction from the live file.",
     "proposition": "A thin ring, when cut and unrolled, becomes a rectangle with width 2\u03c0r (the circumference) and height dr (the thickness)",
-    "narrative_draft": "Now for the key trick. Imagine taking scissors to one of those rings, snipping it open, and laying it flat on the table. What do you get? A thin rectangle.\n\nThe width of that rectangle is the circumference at that radius \u2014 2\u03c0r. The height is just the thickness of the ring. Adjust the slider to change how many rings divide the circle. As you add more rings, each one gets thinner, and the stack of rectangles shows a cleaner approximation of something familiar.\n\nDo you see it forming? The rectangles are arranging themselves into a shape you already know.",
+    "narrative_draft": "Now see the magic connection. On the left is your circle, divided into rings. On the right is where those rings end up when unrolled \u2014 stacked into a triangle.\n\nWatch what happens when you highlight a ring. The corresponding strip in the triangle lights up at the same moment. Each ring becomes a horizontal strip \u2014 its width is the circumference at that radius, 2\u03c0r.\n\nThe connection between circle and triangle is direct and visible. Every ring has its place in the triangle.",
     "contract": {
-      "student_changes": "adjusts the number of rings with a slider",
-      "student_sees": "strips become thinner and more numerous, forming a stepped triangle shape",
+      "student_changes": "observes highlighted ring correspondence",
+      "student_sees": "highlighted ring on left corresponds to highlighted strip on right; the triangle shows all rings stacked",
       "unlocks": [
         "numRings"
       ],
       "carries_over": [
         "R"
       ]
-    },
-    "revision_instruction": "Replace this section's current implementation entirely \u2014 rebuild it from this brief and the approved live visual; do not keep the existing approach."
+    }
   }
 }

@@ -1,17 +1,17 @@
 {
   "section_id": "slicing-into-rings",
   "title": "Building Circle by Radius",
-  "status": "ready",
-  "detail": "live in the preview \u2014 quality checks skipped at your request",
-  "summary": "Building Circle by Radius \u2014 The circle isn't a solid blob but many thin rings stacked together from center outward",
+  "status": "building",
+  "detail": "writing spec and code",
+  "summary": "",
   "verify_passed": null,
-  "is_revision": true,
-  "registered": true,
+  "is_revision": false,
+  "registered": false,
   "issues": [],
   "skip_verification": true,
-  "sdk_session_id": "35692616-b923-45b9-a6c4-ee669d247ae7",
-  "created_at": 1786040781.9917839,
-  "updated_at": 1786041023.523254,
+  "sdk_session_id": "e70cbffe-a270-4a2b-86ab-7a6add61c17d",
+  "created_at": 1786074396.233637,
+  "updated_at": 1786074396.767575,
   "payload": {
     "section_id": "slicing-into-rings",
     "learning_objective": "Understand that a circle can be decomposed into many thin concentric rings stacked from center outward",
@@ -28,7 +28,7 @@
     "target_misconception": "",
     "audience": "University (ages 20+)",
     "learner_profile": "Need foundations and step-by-step support",
-    "section_context": "Opening section of the lesson. Students first encounter the decomposition idea before moving on to unwrapping rings and seeing the triangle emerge.",
+    "section_context": "Opening section of the lesson. Students first encounter the decomposition idea before moving on to seeing the ring-to-strip connection and the triangle emerge.",
     "design_brief": "READ the approved live scene from ../../scene_live/b26474d5b37b1fb5ed01b784.html and port its mathematics and interaction faithfully. The scene shows a draggable radius arrow that paints concentric rings as it extends outward. Do NOT redesign \u2014 use the exact interaction from the live file.",
     "proposition": "A circle can be divided into thin concentric rings at every distance from center to edge",
     "opening": {
@@ -46,7 +46,6 @@
       "unlocks": [
         "R"
       ]
-    },
-    "revision_instruction": "Replace this section's current implementation entirely \u2014 rebuild it from this brief and the approved live visual; do not keep the existing approach."
+    }
   }
 }
