@@ -240,6 +240,22 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         description: 'Derived: percentage error between rectangle sum and exact πR²',
     },
 
+    /** Derived: currently highlighted ring index (for correspondence visualization) */
+    unwrapping_highlightedRing: {
+        defaultValue: 2,
+        type: 'number',
+        label: 'Highlighted Ring',
+        description: 'Index of the currently highlighted ring (0-indexed)',
+    },
+
+    /** Derived: circumference of the highlighted ring */
+    unwrapping_highlightedCircumference: {
+        defaultValue: 0,
+        type: 'number',
+        label: 'Highlighted Circumference',
+        description: 'Derived: circumference of the highlighted ring = 2πr',
+    },
+
     /** Assessment: what shape do the rectangles form */
     unwrapping_shapeAnswer: {
         defaultValue: '',
